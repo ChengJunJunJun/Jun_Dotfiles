@@ -17,7 +17,7 @@ opt.smartindent = true
 opt.wrap = false
 opt.cursorline = true
 opt.signcolumn = "yes"
-opt.colorcolumn = "80"
+opt.colorcolumn = "88,100"
 
 -- 🖱️ 交互设置
 opt.mouse = 'a'

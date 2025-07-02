@@ -27,5 +27,6 @@ alias vim='nvim'
 alias vi='nvim'
 
 # 🔍 文件搜索别名
-alias fd='find . -name'
-alias fda='find . -name "*" -type f | grep -i' 
+alias fdf='fd --type f --hidden --follow'
+alias fdd='fd --type d --hidden --follow'
+alias rga='rg --smart-case --hidden --follow --no-heading --line-number'
