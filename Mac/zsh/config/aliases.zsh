@@ -12,7 +12,6 @@ alias grep='grep --color=auto'
 
 # 🍺 Homebrew 别名
 alias up="brew update && brew upgrade && brew cu -a -y && brew cleanup --prune=all && brew autoremove && brew doctor --quiet"
-alias rust_up="rustup update stable"
 alias uninstall="brew uninstall --cask --force --zap"
 
 # 🔄 系统管理别名
@@ -31,3 +30,6 @@ alias vi='nvim'
 alias fdf='fd --type f --hidden --follow'
 alias fdd='fd --type d --hidden --follow'
 alias rga='rg --smart-case --hidden --follow --no-heading --line-number'
+
+alias rust_up="rustup update stable"
+alias lg="lazygit"
