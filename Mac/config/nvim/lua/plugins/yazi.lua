@@ -6,12 +6,6 @@
 
 ---@type LazySpec
 return {
-  -- Needed for file path resolution mainly
-  { "nvim-lua/plenary.nvim", lazy = true },
-  
-  -- 需要添加 snacks.nvim 依赖来支持某些功能
-  { "folke/snacks.nvim", lazy = true },
-
   {
     "mikavilpas/yazi.nvim",
     event = "VeryLazy",
@@ -44,6 +38,7 @@ return {
       open_for_directories = false,
       keymaps = {
         show_help = "<f1>",
+        copy_relative_path_to_selected_files = nil, -- 修复 grealpath 警告
       },
     },
     cmd = {

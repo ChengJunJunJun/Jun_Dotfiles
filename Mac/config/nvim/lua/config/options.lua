@@ -1,68 +1,63 @@
--- ⚡ 性能优化的选项配置
-
+-- ⚡ 性能优化的选项设置
 local opt = vim.opt
 
--- 🔢 行号配置
+-- 🎨 外观设置
 opt.number = true
 opt.relativenumber = true
-
--- 📏 缩进配置
-opt.tabstop = 2
-opt.shiftwidth = 2
-opt.expandtab = true
-opt.autoindent = true
-opt.smartindent = true
-
--- 📄 显示设置
-opt.wrap = false
-opt.cursorline = true
+opt.termguicolors = true
 opt.signcolumn = "yes"
-opt.colorcolumn = "88,100"
+opt.cursorline = true
 
--- 🖱️ 交互设置
-opt.mouse = 'a'
-opt.clipboard = 'unnamedplus'
+-- 📝 编辑体验
+opt.expandtab = true
+opt.tabstop = 2
+opt.softtabstop = 2
+opt.shiftwidth = 2
+opt.smartindent = true
+opt.wrap = false
 
--- 🪟 窗口分割
+-- 🔍 搜索设置
+opt.ignorecase = true
+opt.smartcase = true
+opt.hlsearch = false
+opt.incsearch = true
+
+-- 💾 文件处理
+opt.swapfile = false
+opt.backup = false
+opt.undofile = true
+opt.undodir = os.getenv("HOME") .. "/.vim/undodir"
+
+-- ⚡ 性能优化
+opt.updatetime = 250
+opt.timeoutlen = 300
+opt.lazyredraw = true
+opt.ttyfast = true
+
+-- 🖱️ 鼠标支持
+opt.mouse = "a"
+
+-- 📋 剪贴板
+opt.clipboard = "unnamedplus"
+
+-- 🔄 分屏行为
 opt.splitright = true
 opt.splitbelow = true
 
--- 🔍 搜索优化
-opt.ignorecase = true
-opt.smartcase = true
-opt.hlsearch = true
-opt.incsearch = true
+-- 🚫 禁用提供者以减少警告和提升启动速度
+vim.g.loaded_python3_provider = 0  -- 禁用 Python3 提供者
+vim.g.loaded_ruby_provider = 0     -- 禁用 Ruby 提供者
+vim.g.loaded_perl_provider = 0     -- 禁用 Perl 提供者
+vim.g.loaded_node_provider = 0     -- 禁用 Node.js 提供者
 
--- 🎨 外观设置
-opt.termguicolors = true
-opt.background = "dark"
-
--- ⚡ 性能优化设置
-opt.lazyredraw = true      -- 宏执行时不重绘
-opt.regexpengine = 0       -- 自动选择最快的正则引擎
-opt.synmaxcol = 240        -- 限制语法高亮的列数
-opt.updatetime = 250       -- 更快的 swap 文件写入
-opt.timeoutlen = 300       -- 更快的按键超时
-opt.ttimeoutlen = 10       -- 更快的按键码超时
-
--- 💾 备份和撤销
-opt.backup = false
-opt.writebackup = false
-opt.swapfile = false
-opt.undofile = true
-opt.undodir = vim.fn.stdpath("data") .. "/undo"
-
--- 📝 编辑增强
+-- 📱 滚动设置
 opt.scrolloff = 8
 opt.sidescrolloff = 8
-opt.confirm = true
-opt.conceallevel = 0
 
--- 🔄 补全设置
-opt.completeopt = { "menu", "menuone", "noselect" }
-opt.pumheight = 10         -- 限制补全菜单高度
-opt.pumwidth = 15          -- 限制补全菜单宽度
+-- 🎯 补全设置
+opt.completeopt = "menu,menuone,noselect"
 
--- 🚫 禁用一些功能以提升性能
-opt.foldenable = false     -- 禁用代码折叠
-opt.foldmethod = "manual"  -- 手动折叠模式
+-- 🔧 其他优化
+opt.hidden = true
+opt.errorbells = false
+opt.visualbell = false

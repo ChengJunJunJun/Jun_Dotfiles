@@ -3,14 +3,7 @@
 # =============================================================================
 
 # 🚀 Zinit 初始化
-ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
-if [[ -f "${ZINIT_HOME}/zinit.zsh" ]]; then
-  source "${ZINIT_HOME}/zinit.zsh"
-else
-  echo "❌ Zinit not found. Please install it first:"
-  echo "bash -c \"\$(curl --fail --show-error --silent --location https://raw.githubusercontent.com/zdharma-continuum/zinit/HEAD/scripts/install.sh)\""
-  return 1
-fi
+source /opt/homebrew/opt/zinit/zinit.zsh
 
 # 🔥 高性能插件配置
 

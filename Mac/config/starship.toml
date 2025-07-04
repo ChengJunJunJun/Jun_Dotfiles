@@ -1,0 +1,10 @@
+# ~/.config/starship.toml
+
+[os]
+format = "on [($name )]($style)"
+style = "bold blue"
+disabled = false
+
+[os.symbols]
+Macos = "🍎 "
+Arch = "Arch is the best! "
