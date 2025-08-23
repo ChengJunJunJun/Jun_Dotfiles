@@ -1,0 +1,182 @@
+// Jun's Zed 编辑器配置文件
+// 官方配置文档: https://zed.dev/docs/configuring-zed
+
+{
+  // AI 助手配置
+  "icon_theme": "Catppuccin Macchiato",
+
+  "agent": {
+    "default_profile": "ask",
+    "default_model": {
+      "provider": "zed.dev",
+      "model": "claude-sonnet-4"
+    }
+  },
+
+  // 自动保存设置
+  "autosave": {
+    "after_delay": {
+      "milliseconds": 1000
+    }
+  },
+  "format_on_save": "on", // 保存时自动格式化
+  "ensure_final_newline_on_save": true, // 保存时确保文件末尾有换行符
+  "restore_on_startup": "none",
+
+  // 实验性主题覆盖设置
+  "experimental.theme_overrides": {
+    "syntax": {
+      "keyword": {
+        "color": "#9D70FF"
+      },
+      "function": {
+        "color": "#BCBEC4"
+      }
+    }
+  },
+  
+  // 活动面板样式
+  "active_pane_modifiers": {
+    "border_size": 2.0,
+    "inactive_opacity": 0.8
+  },
+
+  // LSP 和代码功能
+  "lsp_document_colors": "inlay",
+  "inline_code_actions": true,
+  "inlay_hints": {
+    "enabled": true,
+    "show_type_hints": true,
+    "show_parameter_hints": true
+  },
+
+  // 界面显示设置
+  "minimap": {
+    "show": "never"
+  },
+  "scrollbar": {
+    "show": "auto"
+  },
+  "tab_bar": {
+    "show": true
+  },
+  "preview_tabs": {
+    "enabled": false
+  },
+
+  // 搜索设置
+  "search": {
+    "button": false,
+    "case_sensitive": false,
+    "whole_word": false,
+    "include_ignored": false
+  },
+
+  // 项目面板
+  "project_panel": {
+    "starts_open": true,
+    "sticky_scroll": true,
+    "dock": "left",
+    "default_width": 280,
+    "file_icons": true,
+    "folder_icons": true,
+    "git_status": true
+  },
+
+  // 工具栏设置
+  "toolbar": {
+    "breadcrumbs": true,
+    "quick_actions": true,
+    "selections_menu": false
+  },
+
+  // 状态栏设置
+  "status_bar": {},
+
+  // 字体配置
+  "ui_font_family": "Hack Nerd Font Mono",
+  "buffer_font_family": "Hack Nerd Font Mono",
+  "ui_font_size": 14,
+  "buffer_font_size": 13,
+  "buffer_line_height": {
+    "custom": 1.4
+  },
+
+  // 编辑器功能
+  "features": {
+    "edit_prediction_provider": "zed"
+  },
+  "show_edit_predictions": false,
+
+  // 主题和外观
+  "theme": "One Dark Pro",
+  "hide_mouse": "on_typing_and_movement",
+
+  // 光标设置
+  "cursor_shape": "bar",
+  "cursor_blink": false,
+  "relative_line_numbers": true,
+
+  // 缩进和空白字符
+  "indent_guides": {
+    "enabled": true,
+    "coloring": "indent_aware"
+  },
+  "show_whitespaces": "selection",
+  "tab_size": 2,
+  "hard_tabs": false,
+
+  // 换行设置
+  "wrap_guides": [80, 120],
+  "show_wrap_guides": true,
+  "preferred_line_length": 80,
+  "soft_wrap": "none",
+
+  // Git 集成
+  "git": {
+    "git_gutter": "tracked_files",
+    "inline_blame": {
+      "enabled": true,
+      "delay_ms": 800
+    }
+  },
+
+  // Vim 模式配置
+  "vim_mode": false,
+  "vim": {
+    "use_system_clipboard": "always",
+    "use_smartcase_find": true
+  },
+
+  // 终端配置
+  "terminal": {
+    "font_family": "Hack Nerd Font Mono",
+    "font_size": 14,
+    "working_directory": "current_project_directory",
+    "blinking": "off"
+  },
+
+  // 遥测设置
+  "telemetry": {
+    "metrics": false,
+    "diagnostics": false
+  },
+
+  // 特定语言设置
+  "languages": {
+    "Python": {
+      "format_on_save": "on"
+    },
+    "Rust": {
+      "format_on_save": "on"
+    },
+    "Markdown": {
+      "soft_wrap": "preferred_line_length",
+      "preferred_line_length": 80
+    },
+    "JSON": {
+      "tab_size": 2,
+      "format_on_save": "on"
+    }
+  }
+}

@@ -1,0 +1,7 @@
+[
+  {
+    "bindings": {
+    "cmd-k cmd-s": "zed::OpenKeymap"
+    }
+  }
+]

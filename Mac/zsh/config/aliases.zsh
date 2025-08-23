@@ -33,3 +33,12 @@ alias rga='rg --smart-case --hidden --follow --no-heading --line-number'
 
 alias rust_up="rustup update stable"
 alias lg="lazygit"
+
+# tmux 别名
+alias tmux_new="tmux new -s "
+alias tmux_attach="tmux attach -t "
+alias tmux_kill="tmux kill-session -t "
+alias tmux_list="tmux ls"
+alias tmux_rename="tmux rename-session -t "
+alias tmux_rename_current="tmux rename-session -t "
+alias tmux_rename_current="tmux rename-session -t "

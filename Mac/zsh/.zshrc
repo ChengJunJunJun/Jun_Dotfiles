@@ -9,7 +9,7 @@ ZSH_CONFIG_DIR="${HOME}/Jun_Dotfiles/Mac/zsh/config"
 load_config() {
     local config_file="$1"
     local config_path="${ZSH_CONFIG_DIR}/${config_file}"
-    
+
     if [[ -f "$config_path" ]]; then
         source "$config_path"
     else
@@ -45,4 +45,4 @@ load_config "lazy-loading.zsh"
 # echo "✅ Zsh configuration loaded successfully!"
 
 # 🧹 清理临时函数
-unfunction load_config 
+unfunction load_config
