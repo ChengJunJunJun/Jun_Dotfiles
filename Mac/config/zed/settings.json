@@ -34,7 +34,7 @@
       }
     }
   },
-  
+
   // 活动面板样式
   "active_pane_modifiers": {
     "border_size": 2.0,
@@ -97,7 +97,7 @@
   "ui_font_family": "Hack Nerd Font Mono",
   "buffer_font_family": "Hack Nerd Font Mono",
   "ui_font_size": 14,
-  "buffer_font_size": 13,
+  "buffer_font_size": 14,
   "buffer_line_height": {
     "custom": 1.4
   },
@@ -165,7 +165,8 @@
   // 特定语言设置
   "languages": {
     "Python": {
-      "format_on_save": "on"
+      "format_on_save": "on",
+      "language_servers": ["ruff"]
     },
     "Rust": {
       "format_on_save": "on"

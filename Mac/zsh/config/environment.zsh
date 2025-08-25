@@ -13,6 +13,7 @@ export PATH="/opt/homebrew/opt/node@22/bin:$PATH"
 export PATH="/Library/TeX/texbin:$PATH"
 export PATH="/opt/homebrew/opt/rustup/bin:$PATH"
 export PATH=$(echo "$PATH" | awk -v RS=: -v ORS=: '!a[$1]++' | sed 's/:$//')
+export PATH="/Users/cj/.local/share/../bin:$PATH"                              # 支持 uv 
 
 # 🗂️ XDG 规范配置
 export XDG_CONFIG_HOME="$HOME/.config"
