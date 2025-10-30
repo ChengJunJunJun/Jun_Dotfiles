@@ -1,4 +1,7 @@
 -- lua/plugins/lsp.lua
+-- LSP 配置文件 - 使用 Neovim 0.11+ 的新 API
+-- 提供 Python 语言服务器支持（Pyright 和 Ruff）
+
 return {
   {
     "neovim/nvim-lspconfig",
@@ -30,8 +33,9 @@ return {
         automatic_installation = true,  -- 自动安装
       })
 
+      -- 使用新的 vim.lsp.config API (Neovim 0.11+)
       -- 配置 Pyright
-      require("lspconfig").pyright.setup({
+      vim.lsp.config.pyright = {
         capabilities = capabilities,
         settings = {
           python = {
@@ -42,12 +46,16 @@ return {
             }
           }
         }
-      })
+      }
       
       -- 配置 Ruff (新版本)
-      require("lspconfig").ruff.setup({
+      vim.lsp.config.ruff = {
         capabilities = capabilities,
-      })
+      }
+
+      -- 启用 LSP 服务器
+      vim.lsp.enable('pyright')
+      vim.lsp.enable('ruff')
     end
   }
 }

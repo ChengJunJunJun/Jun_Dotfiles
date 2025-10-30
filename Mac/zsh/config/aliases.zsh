@@ -19,8 +19,8 @@ alias s.="source ~/.zshrc"
 alias echopath="echo \$PATH | tr ':' '\n' | nl"
 
 # 🖥️ SSH 连接别名
-alias ssh4090="ssh -p 49919 chengjun@i38944o710.goho.co"
-alias ssh3090="ssh -p 29050 chengjun@i38944o710.goho.co"
+alias ssh4090="ssh -p 41380 chengjun@110os9214fc69.vicp.fun"
+alias ssh3090="ssh -p 35515 chengjun@110os9214fc69.vicp.fun"
 
 # 📝 编辑器别名
 alias vim='nvim'
