@@ -94,13 +94,11 @@
     "status_bar": {},
 
     // 字体配置
-    "ui_font_family": "Hack Nerd Font Mono",
-    "buffer_font_family": "Hack Nerd Font Mono",
+    "ui_font_family": "JetBrains Mono",
+    "buffer_font_family": "JetBrains Mono",
     "ui_font_size": 14,
-    "buffer_font_size": 14,
-    "buffer_line_height": {
-        "custom": 1.4
-    },
+    "buffer_font_size": 13.0,
+    "buffer_line_height": "comfortable",
 
     // 编辑器功能
     "features": {

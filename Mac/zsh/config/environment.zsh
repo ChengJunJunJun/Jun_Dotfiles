@@ -15,6 +15,11 @@ export PATH="/opt/homebrew/opt/rustup/bin:$PATH"
 export PATH=$(echo "$PATH" | awk -v RS=: -v ORS=: '!a[$1]++' | sed 's/:$//')
 export PATH="/Users/cj/.local/share/../bin:$PATH"                              # 支持 uv 
 
+# surge 配置（使终端生效）
+export https_proxy=http://127.0.0.1:6152
+export http_proxy=http://127.0.0.1:6152
+export all_proxy=socks5://127.0.0.1:6153
+
 # 🗂️ XDG 规范配置
 export XDG_CONFIG_HOME="$HOME/.config"
 export XDG_DATA_HOME="$HOME/.local/share"

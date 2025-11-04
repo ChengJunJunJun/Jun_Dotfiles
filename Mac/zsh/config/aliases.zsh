@@ -14,6 +14,9 @@ alias grep='grep --color=auto'
 alias up="brew update && brew upgrade && brew cu -a -y && brew cleanup --prune=all && brew autoremove && brew doctor --quiet"
 alias uninstall="brew uninstall --cask --force --zap"
 
+# 刷新 DNS 缓存
+alias refresh="sudo dscacheutil -flushcache; sudo killall -HUP mDNSResponder"
+
 # 🔄 系统管理别名
 alias s.="source ~/.zshrc"
 alias echopath="echo \$PATH | tr ':' '\n' | nl"
