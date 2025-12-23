@@ -68,5 +68,26 @@ vim.api.nvim_create_autocmd("VimResized", {
 
 })
 
+-- 在 tmux 中自动隐藏/显示状态栏
+if vim.env.TMUX then
+    -- 进入 Neovim 时隐藏 tmux 状态栏
+    vim.api.nvim_create_autocmd("VimEnter", {
+        group = augroup,
+        pattern = "*",
+        callback = function()
+            vim.fn.system("tmux set status off")
+        end,
+    })
+
+    -- 离开 Neovim 时恢复 tmux 状态栏
+    vim.api.nvim_create_autocmd("VimLeavePre", {
+        group = augroup,
+        pattern = "*",
+        callback = function()
+            vim.fn.system("tmux set status on")
+        end,
+    })
+end
+
 return {} -- 返回一个空表，以便可以被 require
 
