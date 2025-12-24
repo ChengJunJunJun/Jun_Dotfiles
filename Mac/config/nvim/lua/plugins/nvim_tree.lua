@@ -15,11 +15,11 @@ return {
         side = "left",
       },
       filters = {
-        dotfiles = false,
-        custom = { "node_modules", ".git" }
+        dotfiles = false ,
+        custom = { "node_modules"}
       },
       git = {
-        enable = false, -- 禁用 git 集成以提升性能
+        enable = true, -- 禁用 git 集成以提升性能
       },
       actions = {
         open_file = {
@@ -27,7 +27,7 @@ return {
         },
       },
     })
-    
+
     vim.keymap.set('n', '<leader>e', ':NvimTreeToggle<CR>', { desc = 'Toggle file tree' })
   end
 }
