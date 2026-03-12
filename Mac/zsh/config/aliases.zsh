@@ -13,6 +13,7 @@ alias grep='grep --color=auto'
 # 🍺 Homebrew 别名
 alias up="brew update && brew upgrade && brew cu -a -y && brew cleanup --prune=all && brew autoremove && brew doctor --quiet"
 alias uninstall="brew uninstall --cask --force --zap"
+alias update-ai="npm update -g @anthropic-ai/claude-code @openai/codex"
 
 # 刷新 DNS 缓存
 alias refresh="sudo dscacheutil -flushcache; sudo killall -HUP mDNSResponder"
