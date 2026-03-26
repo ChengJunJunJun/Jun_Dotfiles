@@ -44,3 +44,5 @@ Set-PSReadLineOption -PredictionViewStyle ListView
 # 上下键历史搜索
 Set-PSReadLineKeyHandler -Key UpArrow -Function HistorySearchBackward
 Set-PSReadLineKeyHandler -Key DownArrow -Function HistorySearchForward
+
+Invoke-Expression (&starship init powershell)
