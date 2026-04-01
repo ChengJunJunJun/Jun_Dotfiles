@@ -27,6 +27,27 @@ require("config.options")
 require("config.keymaps")
 require("config.autocmds")
 
+-- Neovim 0.12 + 现有 markdown parser/query 组合在这套环境里会触发 highlighter 崩溃。
+-- 在上游组合稳定前，统一拦截 Markdown 的 Treesitter 高亮启动，回退到内置语法高亮。
+do
+  local ts_start = vim.treesitter.start
+  vim.treesitter.start = function(bufnr, lang)
+    bufnr = bufnr == 0 and vim.api.nvim_get_current_buf() or bufnr
+    local ft = bufnr and vim.bo[bufnr].filetype or ""
+    local ts_lang = lang or vim.treesitter.language.get_lang(ft)
+
+    if ft == "markdown" or ts_lang == "markdown" or ts_lang == "markdown_inline" then
+      return false
+    end
+
+    return ts_start(bufnr, lang)
+  end
+
+  if vim.bo.filetype == "markdown" then
+    pcall(vim.treesitter.stop)
+  end
+end
+
 -- ⚡ 性能优化设置
 vim.opt.termguicolors = true
 vim.opt.timeoutlen = 300

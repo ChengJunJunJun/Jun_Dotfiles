@@ -43,8 +43,6 @@ return {
     },
     cmd = {
       "Yazi",
-      "Yazi cwd", 
-      "Yazi toggle",
     },
   },
 }

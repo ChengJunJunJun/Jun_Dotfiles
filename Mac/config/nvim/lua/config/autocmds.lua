@@ -7,7 +7,16 @@ local augroup = vim.api.nvim_create_augroup("UserAutoCommands", { clear = true }
 vim.api.nvim_create_autocmd({ "BufWritePre" }, {
     group = augroup,
     pattern = "*",
-    command = [[%s/\s\+$//e]],
+    callback = function(args)
+        local bufnr = args.buf
+        if not vim.bo[bufnr].modifiable or vim.bo[bufnr].readonly or vim.bo[bufnr].buftype ~= "" then
+            return
+        end
+
+        local view = vim.fn.winsaveview()
+        vim.cmd([[silent! %s/\s\+$//e]])
+        vim.fn.winrestview(view)
+    end,
 })
 
 -- 高亮复制区域
@@ -46,10 +55,21 @@ vim.api.nvim_create_autocmd("FileType", {
 -- 为特定文件启用拼写检查
 vim.api.nvim_create_autocmd("FileType", {
     group = augroup,
-    pattern = { "markdown", "gitcommit", "text" },
-    callback = function()
-        vim.wo.spell = true
-        vim.wo.spelllang = "en_us"
+    pattern = { "gitcommit", "text" },
+    callback = function(args)
+        pcall(vim.treesitter.stop, args.buf)
+        vim.opt_local.spell = true
+        vim.opt_local.spelllang = "en_us"
+    end,
+})
+
+vim.api.nvim_create_autocmd({ "BufEnter", "BufWinEnter" }, {
+    group = augroup,
+    pattern = "*.md",
+    callback = function(args)
+        if vim.bo[args.buf].filetype == "markdown" then
+            pcall(vim.treesitter.stop, args.buf)
+        end
     end,
 })
 
@@ -90,4 +110,3 @@ if vim.env.TMUX then
 end
 
 return {} -- 返回一个空表，以便可以被 require
-

@@ -4,40 +4,42 @@ return {
     {
       "nvim-lualine/lualine.nvim",
       event = "VeryLazy",
-      opts = {
-        options = {
-          icons_enabled = true,
-          theme = 'catppuccin',
-          component_separators = '|',
-          section_separators = '',
-        },
-        -- 🔥 明确指定sections，避免使用默认配置
-        sections = {
-          lualine_a = {'mode'},
-          lualine_b = {'branch', 'diff', 'diagnostics'},
-          lualine_c = {'filename'},
-          lualine_x = {
-            'encoding', 
-            {
-              'fileformat',
-              symbols = {
-                unix = '🍎',
-              }
-            },
-            'filetype'
+      opts = function()
+        return {
+          options = {
+            icons_enabled = true,
+            theme = require("catppuccin.utils.lualine")("mocha"),
+            component_separators = '|',
+            section_separators = '',
           },
-          lualine_y = {'progress'},
-          lualine_z = {'location'}
-        },
-        inactive_sections = {
-          lualine_a = {},
-          lualine_b = {},
-          lualine_c = {'filename'},
-          lualine_x = {'location'},
-          lualine_y = {},
-          lualine_z = {}
-        },
-      },
+          -- 🔥 明确指定sections，避免使用默认配置
+          sections = {
+            lualine_a = {'mode'},
+            lualine_b = {'branch', 'diff', 'diagnostics'},
+            lualine_c = {'filename'},
+            lualine_x = {
+              'encoding',
+              {
+                'fileformat',
+                symbols = {
+                  unix = '🍎',
+                }
+              },
+              'filetype'
+            },
+            lualine_y = {'progress'},
+            lualine_z = {'location'}
+          },
+          inactive_sections = {
+            lualine_a = {},
+            lualine_b = {},
+            lualine_c = {'filename'},
+            lualine_x = {'location'},
+            lualine_y = {},
+            lualine_z = {}
+          },
+        }
+      end,
     },
     
     -- 缓冲区标签页
