@@ -18,3 +18,9 @@ keymap("n", "<leader>q", ":q<CR>")
 keymap("n", "<S-h>", ":bprevious<CR>")
 keymap("n", "<S-l>", ":bnext<CR>")
 
+-- 窗口大小调整（Option + 方向键）
+keymap("n", "<M-Up>",    ":resize +2<CR>",          { desc = "增加窗口高度" })
+keymap("n", "<M-Down>",  ":resize -2<CR>",          { desc = "减少窗口高度" })
+keymap("n", "<M-Left>",  ":vertical resize -2<CR>", { desc = "减少窗口宽度" })
+keymap("n", "<M-Right>", ":vertical resize +2<CR>", { desc = "增加窗口宽度" })
+

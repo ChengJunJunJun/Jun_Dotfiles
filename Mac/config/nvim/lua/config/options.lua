@@ -31,8 +31,6 @@ opt.undodir = os.getenv("HOME") .. "/.vim/undodir"
 -- ⚡ 性能优化
 opt.updatetime = 250
 opt.timeoutlen = 300
-opt.lazyredraw = true
-opt.ttyfast = true
 
 -- 🖱️ 鼠标支持
 opt.mouse = "a"
@@ -58,6 +56,5 @@ opt.sidescrolloff = 8
 opt.completeopt = "menu,menuone,noselect"
 
 -- 🔧 其他优化
-opt.hidden = true
 opt.errorbells = false
 opt.visualbell = false

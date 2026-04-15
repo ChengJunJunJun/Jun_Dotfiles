@@ -23,7 +23,7 @@ return {
       },
       actions = {
         open_file = {
-          quit_on_open = true,
+          quit_on_open = false,  -- 打开文件后保持文件栏
         },
       },
     })

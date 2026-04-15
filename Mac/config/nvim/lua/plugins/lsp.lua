@@ -26,14 +26,14 @@ return {
       
       local mason_lspconfig = require('mason-lspconfig')
       mason_lspconfig.setup({
-        ensure_installed = { 
-          "pyright",  -- Python 类型检查
-          "ruff"      -- Python linting (新版本)
+        ensure_installed = {
+          "pyright",   -- Python 类型检查
+          "ruff",      -- Python linting
+          "lua_ls",    -- Lua（覆盖自己的 nvim 配置）
         },
-        automatic_installation = true,  -- 自动安装
+        automatic_installation = true,
       })
 
-      -- 使用新的 vim.lsp.config API (Neovim 0.11+)
       -- 配置 Pyright
       vim.lsp.config.pyright = {
         capabilities = capabilities,
@@ -47,15 +47,34 @@ return {
           }
         }
       }
-      
-      -- 配置 Ruff (新版本)
+
+      -- 配置 Ruff
       vim.lsp.config.ruff = {
         capabilities = capabilities,
+      }
+
+      -- 配置 lua_ls，识别 vim 全局变量和运行时 API
+      vim.lsp.config.lua_ls = {
+        capabilities = capabilities,
+        settings = {
+          Lua = {
+            runtime = { version = "LuaJIT" },
+            workspace = {
+              checkThirdParty = false,
+              library = vim.api.nvim_get_runtime_file("", true),
+            },
+            diagnostics = {
+              globals = { "vim" },
+            },
+            telemetry = { enable = false },
+          },
+        },
       }
 
       -- 启用 LSP 服务器
       vim.lsp.enable('pyright')
       vim.lsp.enable('ruff')
+      vim.lsp.enable('lua_ls')
     end
   }
 }

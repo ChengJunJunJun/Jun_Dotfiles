@@ -24,14 +24,4 @@ return {
       opts = {}
     },
     
-    -- 终端
-    {
-      "akinsho/toggleterm.nvim",
-      event = "VeryLazy",
-      version = "*",
-      opts = {
-        size = 10,
-        open_mapping = "<C-t>",
-      }
-    }
   }

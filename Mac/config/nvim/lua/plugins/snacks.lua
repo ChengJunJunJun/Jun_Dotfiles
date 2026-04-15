@@ -21,7 +21,10 @@ return {
       
       -- 启用有用的功能
       lazygit = { enabled = true },
-      terminal = { enabled = true },
+      terminal = {
+        enabled = true,
+        win = { height = 0.28 },  -- 终端默认占屏幕高度 28%
+      },
       toggle = { enabled = false }, -- 需要 which-key
     },
     keys = {

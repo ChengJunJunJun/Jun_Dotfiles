@@ -52,12 +52,33 @@ return {
         { "<leader>bp", "<cmd>BufferLineTogglePin<CR>", desc="Toggle Buffer Pin" },
         { "<leader>bP", "<cmd>BufferLineGroupClose ungrouped<CR>", desc="Close Unpinned Buffers" },
       },
-      opts = {
-        options = {
-          diagnostics = "nvim_lsp",
-          numbers = "buffer_id",
-          always_show_bufferline = false
+      opts = function()
+        local p = require("catppuccin.palettes").get_palette("mocha")
+        return {
+          highlights = {
+            fill                = { bg = p.mantle },
+            background          = { fg = p.overlay0, bg = p.mantle },
+            buffer_visible      = { fg = p.overlay1, bg = p.mantle },
+            buffer_selected     = { fg = p.text,     bg = p.base, bold = true, italic = false },
+            separator           = { fg = p.mantle,   bg = p.mantle },
+            separator_visible   = { fg = p.mantle,   bg = p.mantle },
+            separator_selected  = { fg = p.mantle,   bg = p.base },
+            indicator_selected  = { fg = p.lavender, bg = p.base },
+            modified_selected   = { fg = p.peach,    bg = p.base },
+          },
+          options = {
+            diagnostics = "nvim_lsp",
+            numbers = "buffer_id",
+            always_show_bufferline = false,
+            offsets = {
+              {
+                filetype = "NvimTree",
+                text = "",
+                separator = false,
+              },
+            },
+          },
         }
-      }
+      end
     }
   }

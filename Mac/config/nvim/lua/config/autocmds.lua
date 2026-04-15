@@ -3,16 +3,24 @@
 -- 创建 augroup 以便于管理自动命令
 local augroup = vim.api.nvim_create_augroup("UserAutoCommands", { clear = true })
 
--- 在编辑文件时自动删除行尾空白
-vim.api.nvim_create_autocmd({ "BufWritePre" }, {
+-- 在编辑文件时自动删除行尾空白（只对普通代码文件生效）
+-- 白名单：排除不应自动修改的文件类型
+local trim_whitespace_excluded_ft = {
+    gitcommit = true, markdown = true, diff = true,
+    help = true, text = true,
+}
+vim.api.nvim_create_autocmd("BufWritePre", {
     group = augroup,
     pattern = "*",
     callback = function(args)
         local bufnr = args.buf
-        if not vim.bo[bufnr].modifiable or vim.bo[bufnr].readonly or vim.bo[bufnr].buftype ~= "" then
+        if not vim.bo[bufnr].modifiable
+            or vim.bo[bufnr].readonly
+            or vim.bo[bufnr].buftype ~= ""
+            or trim_whitespace_excluded_ft[vim.bo[bufnr].filetype]
+        then
             return
         end
-
         local view = vim.fn.winsaveview()
         vim.cmd([[silent! %s/\s\+$//e]])
         vim.fn.winrestview(view)
@@ -63,21 +71,34 @@ vim.api.nvim_create_autocmd("FileType", {
     end,
 })
 
-vim.api.nvim_create_autocmd({ "BufEnter", "BufWinEnter" }, {
+-- 当 Neovim 失去焦点时自动保存（只保存普通、已命名、可写的 buffer）
+vim.api.nvim_create_autocmd("FocusLost", {
     group = augroup,
-    pattern = "*.md",
-    callback = function(args)
-        if vim.bo[args.buf].filetype == "markdown" then
-            pcall(vim.treesitter.stop, args.buf)
+    callback = function()
+        for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+            if vim.bo[buf].buftype == ""
+                and vim.bo[buf].modifiable
+                and not vim.bo[buf].readonly
+                and vim.api.nvim_buf_get_name(buf) ~= ""
+                and vim.bo[buf].modified
+            then
+                pcall(vim.api.nvim_buf_call, buf, function()
+                    vim.cmd("silent! write")
+                end)
+            end
         end
     end,
 })
 
--- 当 Neovim 失去焦点时自动保存
-vim.api.nvim_create_autocmd({ "FocusLost" }, {
+-- 打开终端时自动激活当前目录的 Python 虚拟环境（.venv）
+vim.api.nvim_create_autocmd("TermOpen", {
     group = augroup,
-    pattern = "*",
-    command = "silent! wa",
+    callback = function()
+        local venv = vim.fn.getcwd() .. "/.venv/bin/activate"
+        if vim.fn.filereadable(venv) == 1 then
+            vim.fn.chansend(vim.b.terminal_job_id, "source " .. venv .. "\n")
+        end
+    end,
 })
 
 -- 自动调整窗口大小
