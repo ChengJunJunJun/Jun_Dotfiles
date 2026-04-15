@@ -8,7 +8,7 @@ return {
         return {
           options = {
             icons_enabled = true,
-            theme = require("catppuccin.utils.lualine")("mocha"),
+            theme = "tokyonight",
             component_separators = '|',
             section_separators = '',
           },
@@ -53,18 +53,18 @@ return {
         { "<leader>bP", "<cmd>BufferLineGroupClose ungrouped<CR>", desc="Close Unpinned Buffers" },
       },
       opts = function()
-        local p = require("catppuccin.palettes").get_palette("mocha")
+        local c = require("tokyonight.colors").setup({ style = "night" })
         return {
           highlights = {
-            fill                = { bg = p.mantle },
-            background          = { fg = p.overlay0, bg = p.mantle },
-            buffer_visible      = { fg = p.overlay1, bg = p.mantle },
-            buffer_selected     = { fg = p.text,     bg = p.base, bold = true, italic = false },
-            separator           = { fg = p.mantle,   bg = p.mantle },
-            separator_visible   = { fg = p.mantle,   bg = p.mantle },
-            separator_selected  = { fg = p.mantle,   bg = p.base },
-            indicator_selected  = { fg = p.lavender, bg = p.base },
-            modified_selected   = { fg = p.peach,    bg = p.base },
+            fill               = { bg = c.bg_dark },
+            background         = { fg = c.dark3,    bg = c.bg_dark },
+            buffer_visible     = { fg = c.dark5,    bg = c.bg_dark },
+            buffer_selected    = { fg = c.fg,       bg = c.bg, bold = true, italic = false },
+            separator          = { fg = c.bg_dark,  bg = c.bg_dark },
+            separator_visible  = { fg = c.bg_dark,  bg = c.bg_dark },
+            separator_selected = { fg = c.bg_dark,  bg = c.bg },
+            indicator_selected = { fg = c.blue,     bg = c.bg },
+            modified_selected  = { fg = c.orange,   bg = c.bg },
           },
           options = {
             diagnostics = "nvim_lsp",
