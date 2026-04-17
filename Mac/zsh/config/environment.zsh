@@ -34,4 +34,11 @@ export HOMEBREW_NO_ANALYTICS=1
 
 # 🌍 语言环境
 export LANG=en_US.UTF-8
-export LC_ALL=en_US.UTF-8 
+export LC_ALL=en_US.UTF-8
+
+# 🔐 仓库根目录的本地密钥（~/Jun_Dotfiles/.env，已在 .gitignore）
+if [[ -r "${HOME}/Jun_Dotfiles/.env" ]]; then
+  set -a
+  source "${HOME}/Jun_Dotfiles/.env"
+  set +a
+fi
