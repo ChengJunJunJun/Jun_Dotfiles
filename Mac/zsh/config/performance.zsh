@@ -5,11 +5,14 @@
 # 🔧 启动性能优化 - 自动补全系统
 autoload -Uz compinit
 
+# 确保缓存目录存在，补全缓存和其他运行态缓存统一放这里
+mkdir -p "${ZSH_CACHE_DIR}" 2>/dev/null
+
 # 每24小时重建一次补全缓存，其他时候跳过检查以提升启动速度
-if [[ -n ~/.zcompdump(#qNmh+24) ]]; then
-  compinit
+if [[ -n "${ZSH_COMPDUMP}"(#qNmh+24) ]]; then
+  compinit -d "${ZSH_COMPDUMP}"
 else
-  compinit -C
+  compinit -C -d "${ZSH_COMPDUMP}"
 fi
 
 # 📜 历史记录配置
@@ -29,4 +32,5 @@ setopt INC_APPEND_HISTORY    # 即时追加历史记录
 _set_cursor() {
   echo -ne '\e[5 q'
 }
+precmd_functions=(${precmd_functions:#_set_cursor})
 precmd_functions+=(_set_cursor)

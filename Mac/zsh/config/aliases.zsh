@@ -19,7 +19,7 @@ alias update-ai="npm update -g @anthropic-ai/claude-code @openai/codex"
 alias refresh="sudo dscacheutil -flushcache; sudo killall -HUP mDNSResponder"
 
 # 🔄 系统管理别名
-alias s.="source ~/.zshrc"
+alias s.="exec zsh"
 alias echopath="echo \$PATH | tr ':' '\n' | nl"
 
 # 🖥️ SSH 连接别名
@@ -44,5 +44,4 @@ alias tmux_attach="tmux attach -t "
 alias tmux_kill="tmux kill-session -t "
 alias tmux_list="tmux ls"
 alias tmux_rename="tmux rename-session -t "
-alias tmux_rename_current="tmux rename-session -t "
 alias tmux_rename_current="tmux rename-session -t "

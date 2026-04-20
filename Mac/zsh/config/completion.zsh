@@ -7,7 +7,7 @@ zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
 zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
 zstyle ':completion:*' menu select
 zstyle ':completion:*' use-cache on
-zstyle ':completion:*' cache-path ~/.zsh/cache
+zstyle ':completion:*' cache-path "${ZSH_CACHE_DIR}"
 
 # 🎯 补全行为优化
 zstyle ':completion:*' completer _complete _match _approximate

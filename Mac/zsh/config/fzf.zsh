@@ -1,3 +1,7 @@
+if [[ ! -o interactive || ! -t 0 || ! -t 1 ]]; then
+  return 0
+fi
+
 ### key-bindings.zsh ###
 #     ____      ____
 #    / __/___  / __/
