@@ -63,13 +63,16 @@ load_config "plugins.zsh"
 # 4. 补全系统配置
 load_config "completion.zsh"
 
-# 5. 别名配置
+# 5. 快捷键配置
+load_config "keybindings.zsh"
+
+# 6. 别名配置
 load_config "aliases.zsh"
 
-# 6. fzf 配置 一个快速、通用的命令行模糊搜索工具
+# 7. fzf 配置 一个快速、通用的命令行模糊搜索工具
 load_config "fzf.zsh"
 
-# 7. 延迟加载功能 (最后加载)
+# 8. 延迟加载功能 (最后加载)
 load_config "lazy-loading.zsh"
 
 # # 🎉 加载完成提示
