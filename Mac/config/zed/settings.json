@@ -3,42 +3,58 @@
 
 {
     // AI 助手配置
+    "proxy": "",
+    "edit_predictions": {
+        "provider": "zed",
+    },
+    "outline_panel": {
+        "dock": "right",
+    },
+    "collaboration_panel": {
+        "dock": "right",
+    },
+    "git_panel": {
+        "dock": "right",
+    },
     "icon_theme": "Catppuccin Macchiato",
 
     "agent": {
-        "default_profile": "ask",
+        "dock": "right",
+        "default_profile": "write",
         "default_model": {
+            "effort": "medium",
+            "enable_thinking": true,
             "provider": "zed.dev",
-            "model": "claude-sonnet-4"
-        }
+            "model": "gpt-5.5",
+        },
     },
 
     // 自动保存设置
     "autosave": {
         "after_delay": {
-            "milliseconds": 1000
-        }
+            "milliseconds": 1000,
+        },
     },
     "format_on_save": "on", // 保存时自动格式化
     "ensure_final_newline_on_save": true, // 保存时确保文件末尾有换行符
-    "restore_on_startup": "none",
+    "restore_on_startup": "last_workspace",
 
     // 实验性主题覆盖设置
     "experimental.theme_overrides": {
         "syntax": {
             "keyword": {
-                "color": "#9D70FF"
+                "color": "#9D70FF",
             },
             "function": {
-                "color": "#BCBEC4"
-            }
-        }
+                "color": "#BCBEC4",
+            },
+        },
     },
 
     // 活动面板样式
     "active_pane_modifiers": {
         "border_size": 2.0,
-        "inactive_opacity": 0.8
+        "inactive_opacity": 0.8,
     },
 
     // LSP 和代码功能
@@ -47,21 +63,21 @@
     "inlay_hints": {
         "enabled": true,
         "show_type_hints": true,
-        "show_parameter_hints": true
+        "show_parameter_hints": true,
     },
 
     // 界面显示设置
     "minimap": {
-        "show": "never"
+        "show": "never",
     },
     "scrollbar": {
-        "show": "auto"
+        "show": "auto",
     },
     "tab_bar": {
-        "show": true
+        "show": true,
     },
     "preview_tabs": {
-        "enabled": false
+        "enabled": false,
     },
 
     // 搜索设置
@@ -69,7 +85,7 @@
         "button": false,
         "case_sensitive": false,
         "whole_word": false,
-        "include_ignored": false
+        "include_ignored": false,
     },
 
     // 项目面板
@@ -80,14 +96,14 @@
         "default_width": 280,
         "file_icons": true,
         "folder_icons": true,
-        "git_status": true
+        "git_status": true,
     },
 
     // 工具栏设置
     "toolbar": {
         "breadcrumbs": true,
         "quick_actions": true,
-        "selections_menu": false
+        "selections_menu": false,
     },
 
     // 状态栏设置
@@ -96,14 +112,11 @@
     // 字体配置
     "ui_font_family": "JetBrains Mono",
     "buffer_font_family": "JetBrains Mono",
-    "ui_font_size": 14,
-    "buffer_font_size": 13.0,
+    "ui_font_size": 15,
+    "buffer_font_size": 14.0,
     "buffer_line_height": "comfortable",
 
     // 编辑器功能
-    "features": {
-        "edit_prediction_provider": "zed"
-    },
     "show_edit_predictions": false,
 
     // 主题和外观
@@ -113,12 +126,12 @@
     // 光标设置
     "cursor_shape": "bar",
     "cursor_blink": false,
-    "relative_line_numbers": true,
+    "relative_line_numbers": "enabled",
 
     // 缩进和空白字符
     "indent_guides": {
         "enabled": true,
-        "coloring": "indent_aware"
+        "coloring": "indent_aware",
     },
     "show_whitespaces": "selection",
     "tab_size": 4,
@@ -135,15 +148,15 @@
         "git_gutter": "tracked_files",
         "inline_blame": {
             "enabled": true,
-            "delay_ms": 800
-        }
+            "delay_ms": 800,
+        },
     },
 
     // Vim 模式配置
     "vim_mode": false,
     "vim": {
         "use_system_clipboard": "always",
-        "use_smartcase_find": true
+        "use_smartcase_find": true,
     },
 
     // 终端配置
@@ -151,31 +164,31 @@
         "font_family": "Hack Nerd Font Mono",
         "font_size": 14,
         "working_directory": "current_project_directory",
-        "blinking": "off"
+        "blinking": "off",
     },
 
     // 遥测设置
     "telemetry": {
         "metrics": false,
-        "diagnostics": false
+        "diagnostics": false,
     },
 
     // 特定语言设置
     "languages": {
         "Python": {
             "format_on_save": "on",
-            "language_servers": ["ruff", "ty"]
+            "language_servers": ["ruff", "ty"],
         },
         "Rust": {
-            "format_on_save": "on"
+            "format_on_save": "on",
         },
         "Markdown": {
-            "soft_wrap": "preferred_line_length",
-            "preferred_line_length": 80
+            "soft_wrap": "none",
+            "preferred_line_length": 80,
         },
         "JSON": {
             "tab_size": 2,
-            "format_on_save": "on"
-        }
-    }
+            "format_on_save": "on",
+        },
+    },
 }

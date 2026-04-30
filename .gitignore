@@ -60,8 +60,10 @@ Mac/tmux/plugins/**/docs/
 # Yazi flavors/themes 通过包管理器安装
 Mac/config/yazi/flavors/
 
-# Yazi 插件目录（如果存在）
-Mac/config/yazi/plugins/
+# Yazi 第三方插件目录（本地自定义插件可单独放行）
+Mac/config/yazi/plugins/*
+!Mac/config/yazi/plugins/cj-only.yazi/
+!Mac/config/yazi/plugins/cj-only.yazi/**
 
 # =============================================================================
 # 个人敏感信息

@@ -31,12 +31,12 @@ normalize_path_entries() {
 # 🔄 PATH 配置
 path=(
   "$HOME/.local/bin"                      # uv 等 Python 用户级工具
-  "$HOME/.antigravity/antigravity/bin"
   /opt/homebrew/bin
   /opt/homebrew/sbin
   /opt/homebrew/opt/node@22/bin
   /opt/homebrew/opt/rustup/bin
   /Library/TeX/texbin
+  /Applications/Obsidian.app/Contents/MacOS
   $path
 )
 normalize_path_entries

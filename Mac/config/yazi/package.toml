@@ -1,7 +1,9 @@
 [plugin]
+# 功能插件依赖。当前快捷键只使用 yazi 内置 fzf/zoxide 插件，所以这里暂不额外安装插件。
 deps = []
 
 [[flavor.deps]]
+# 当前 theme.toml 引用的 Flexoki dark 主题。
 use = "gosxrgxx/flexoki-dark"
 rev = "28e1977"
 hash = "9dbbb64ea20f9f1271c31951dea55c7b"
