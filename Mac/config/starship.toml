@@ -1,0 +1,8 @@
+# Give language version probes enough time on macOS. /usr/bin/swift can be
+# slow on first run because it may initialize toolchain state.
+command_timeout = 5000
+
+[swift]
+detect_extensions = ["swift"]
+detect_files = ["Package.swift"]
+detect_folders = ["Sources"]
