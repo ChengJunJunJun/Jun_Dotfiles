@@ -45,3 +45,6 @@ alias tmux_kill="tmux kill-session -t "
 alias tmux_list="tmux ls"
 alias tmux_rename="tmux rename-session -t "
 alias tmux_rename_current="tmux rename-session -t "
+
+# codex 自定义api
+alias codex-proxy='OPENAI_API_KEY=$MY_PROXY_KEY CODEX_HOME=$HOME/.codex-proxy codex'

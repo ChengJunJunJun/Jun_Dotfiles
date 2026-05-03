@@ -20,7 +20,7 @@
 
     "agent": {
         "dock": "right",
-        "default_profile": "write",
+        "default_profile": "ask",
         "default_model": {
             "effort": "medium",
             "enable_thinking": true,
