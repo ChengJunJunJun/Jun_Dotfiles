@@ -36,6 +36,26 @@ vim.api.nvim_create_autocmd({ "TextYankPost" }, {
     end,
 })
 
+-- 退出插入模式时保持插入光标所在位置，不向左退一格
+vim.api.nvim_create_autocmd("InsertLeavePre", {
+    group = augroup,
+    pattern = "*",
+    callback = function()
+        vim.b.insert_leave_cursor = vim.api.nvim_win_get_cursor(0)
+    end,
+})
+vim.api.nvim_create_autocmd("InsertLeave", {
+    group = augroup,
+    pattern = "*",
+    callback = function()
+        local pos = vim.b.insert_leave_cursor
+        if pos then
+            pcall(vim.api.nvim_win_set_cursor, 0, pos)
+            vim.b.insert_leave_cursor = nil
+        end
+    end,
+})
+
 -- 打开文件时恢复光标位置
 vim.api.nvim_create_autocmd("BufReadPost", {
     group = augroup,

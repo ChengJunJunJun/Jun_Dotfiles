@@ -15,6 +15,7 @@ opt.softtabstop = 2
 opt.shiftwidth = 2
 opt.smartindent = true
 opt.wrap = false
+opt.virtualedit = "onemore"
 
 -- 🔍 搜索设置
 opt.ignorecase = true
