@@ -43,8 +43,12 @@ path=(
 normalize_path_entries
 
 # 语言环境
-export LANG=en_US.UTF-8
-export LC_ALL=en_US.UTF-8
+if locale -a 2>/dev/null | command grep -qi '^en_US\.utf8\|^en_US\.UTF-8$'; then
+  export LANG=en_US.UTF-8
+else
+  export LANG=C.UTF-8
+fi
+unset LC_ALL
 
 # 仓库根目录的本地密钥（已在 .gitignore）
 if [[ -r "${DOTFILES_ROOT}/.env" ]]; then
