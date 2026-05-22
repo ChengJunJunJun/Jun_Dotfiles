@@ -32,6 +32,8 @@ normalize_path_entries() {
 path=(
   "$HOME/.local/bin"
   "$HOME/bin"
+  /opt/nvim-linux-arm64/bin
+  /opt/nvim-linux-x86_64/bin
   /usr/local/bin
   /usr/local/sbin
   /usr/bin
