@@ -52,6 +52,7 @@ Mac/config/nvim/.luarc.json
 Mac/tmux/plugins/**/.git/
 Mac/tmux/plugins/**/tests/
 Mac/tmux/plugins/**/docs/
+Linux/tmux/plugins
 
 # =============================================================================
 # Yazi 第三方包和依赖

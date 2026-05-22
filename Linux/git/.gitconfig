@@ -1,0 +1,93 @@
+# author: chengjun
+# date: 2025-05-24
+# version: 1.0.0
+# description: Git configuration for chengjun
+
+# User Information
+[user]
+	name = chengjun
+	email = chengjun.miracle@gmail.com
+
+[alias]
+	st = status -s
+	lol = log --oneline --graph --all
+
+# Core Git Settings
+[core]
+	autocrlf = input                     # 控制 Git 如何处理行结束符（换行符）的转换。input - 在 Windows 上将 LF 转换为 CRLF，在 Mac 上保持原样。
+	excludesfile = ~/Jun_Dotfiles/Linux/git/.gitignore
+	pager = less -F -X                   # Git 只在输出超过终端高度时才使用分页器
+	editor = nvim                        # 设置默认的编辑器为 nvim
+	# fsmonitor = true                   # 启用文件系统监控器，提升大型仓库的性能。💡 大型项目可以尝试启用
+	# untrackedCache = true              # 缓存未跟踪文件的信息，提升性能。💡 谨慎启用，可能有兼容性问题
+
+# Default Branch Configuration
+[init]
+	defaultBranch = main
+
+# UI and Display Settings
+[column]
+	ui = auto                            # 控制 Git 在终端中显示信息时的列式布局行为。自动列式显示和适应终端宽度。
+	                                     # 主要影响 git branch - 分支列表；git tag - 标签列表；git clean -n - 清理预览；git ls-files - 文件列表
+
+# Branch and Tag Sorting
+[branch]
+	sort = -committerdate                # 控制 Git 在显示分支列表时的排序方式，按照提交者日期进行排序。
+	                                     # 主要影响 git branch - 本地分支列表；git branch -r - 远程分支列表；git branch -a - 所有分支列表
+
+[tag]
+	sort = version:refname               # 使用版本号智能排序而不是简单的字母顺序。版本号智能排序、自然排序、基于 refname。
+										 # 主要影响 git tag - 标签列表；git tag -l - 列出标签；git tag -l "v*" - 模式匹配标签列表
+
+# Diff Configuration
+[diff]
+	algorithm = histogram                # 设置 Git 计算文件差异时使用的算法。
+	colorMoved = plain                   # 高亮显示代码块的移动。
+	mnemonicPrefix = true                # 在 diff 输出中使用更有意义的文件前缀。i/ - index 暂存区；w/ - working tree 工作区；c/ - commit 提交区；o/ - origin 远程仓库
+	renames = true                       # 启用文件重命名检测。
+
+# Push Settings
+[push]
+	default = simple                     # 设置默认的推送行为。simple - 推送当前分支到远程仓库；matching - 推送所有本地分支到远程仓库；current - 推送当前分支到远程仓库
+	autoSetupRemote = true               # 在推送时自动设置远程仓库。
+	followTags = true                    # 在推送时自动跟踪远程标签。自动推送标签到远程仓库。
+
+# Fetch Configuration
+[fetch]
+	prune = true                         # 在执行 git fetch 时自动清理已删除的远程分支引用。
+	# pruneTags = true                   # 在执行 git fetch 时自动清理已删除的远程标签引用。
+	# all = true                         # 在执行 git fetch 时自动从所有配置的远程仓库获取更新。💡
+
+# Merge Settings
+[merge]
+	conflictstyle = zdiff3               # (just 'diff3' if git version < 2.3)
+
+# Pull Configuration
+[pull]
+	# rebase = true 					 # 在执行 git pull 时，自动 rebase 当前分支。
+
+# Rebase Settings
+[rebase]							     # 整理提交历史和保持线性的项目历史。
+	autoSquash = true 					 # 在执行 git rebase 时，自动合并提交。
+	autoStash = true 					 # 在执行 git rebase 时，自动暂存修改。
+	updateRefs = true 					 # 在执行 git rebase 时，自动更新引用。
+
+# Help and Assistance
+[help]
+	autocorrect = prompt 				 # 在执行 git 命令时，如果命令拼写错误，Git 会自动进行拼写纠正。
+
+# Commit Configuration
+[commit]
+	verbose = true 						 # 在执行 git commit 时，显示更多的信息。
+
+# Rerere (Reuse Recorded Resolution)
+[rerere]
+	# enabled = true 					 # 启用 rerere 功能，记录和重用以前的冲突解决方法。
+	# autoupdate = true 				 # 在执行 git rebase 时，自动更新 rerere 数据库。
+
+# Git LFS (Large File Storage) Configuration
+[filter "lfs"]
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true
