@@ -7,6 +7,7 @@
 [user]
 	name = chengjun
 	email = chengjun.miracle@gmail.com
+	signingkey = ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC7Be+rd1ih7T54K49z48lPitow2NNRRLCMuqhh+elFXVERkO9aHuMWJVUE1fcPeXAio2xR7nrPJVG4Tw88TNUgTtcrCttXhEUfsetuypJNgTp31TO/PWYkA4daVkeY8HF+PQ1ODwKZeEpAiAR1i6fe2CxMwYQubJamnmCQndgsa2qaINP0Xf9V+2/WmbAqyIdnVTmDCSBkueLtRaIoXVR2ks3KOAhfZG1SkOFh1YEclxbS/KlO8PfhkL7cy/jYXrkjG+3syZpXPjPr0iObH1V49+XzLJVEmbnEPWx+tELNZolwYIctUwB2HpNi4lXrJef/3lJtxevI8opFPhpBzqaq+yTZgdhNdA1oghtivFMr3MysOMJfyQTU1CzRpwHi0rbnsIbDJxCX0o5aiIql8ZFaU+swL/gMQA7ZqCjOa3g92Ejp4T1IuoFk/OYjSJvFPERh1Jb1DRlQjqnWuveY9+xSRiHUlV1TXBkAH7wNyXKtKGir+S6Ph75ZA3zEj8UG9E7fXEtnNQVtPvmoUFCsDOcjj0JFizo/92yYE7EYwLudce+/iAhx1Uagsn7jAI+FygRVwMRzIRC3xxz2grnqt7XKZfoOomyVae/jfoyuiv5dsZBCllUZFxwqeSM9Wnwgy+3mGE46vqqZIFPmpqc8SUD6Wr0aAnEjAG0Kyv//lttoaw==
 
 [alias]
 	st = status -s
@@ -76,9 +77,17 @@
 [help]
 	autocorrect = prompt 				 # 在执行 git 命令时，如果命令拼写错误，Git 会自动进行拼写纠正。
 
+# Commit Signing Configuration
+[gpg]
+	format = ssh
+
+[gpg "ssh"]
+	program = "/Applications/1Password.app/Contents/MacOS/op-ssh-sign"
+
 # Commit Configuration
 [commit]
 	verbose = true 						 # 在执行 git commit 时，显示更多的信息。
+	gpgsign = true
 
 # Rerere (Reuse Recorded Resolution)
 [rerere]
