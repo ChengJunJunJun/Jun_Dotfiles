@@ -2,7 +2,13 @@
 # 性能优化和监控配置
 # =============================================================================
 
-# 🔧 启动性能优化 - 自动补全系统
+# Grok 补全目录
+if [[ -d "$HOME/.grok/completions/zsh" ]]; then
+  typeset -gU fpath
+  fpath=("$HOME/.grok/completions/zsh" "${fpath[@]}")
+fi
+
+# 启动性能优化 - 自动补全系统
 autoload -Uz compinit
 
 # 确保缓存目录存在，补全缓存和其他运行态缓存统一放这里

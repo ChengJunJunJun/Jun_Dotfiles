@@ -30,6 +30,7 @@ normalize_path_entries() {
 
 # 🔄 PATH 配置
 path=(
+  "$HOME/.grok/bin"                       # Grok CLI
   "$HOME/.local/bin"                      # uv 等 Python 用户级工具
   /opt/homebrew/bin
   /opt/homebrew/sbin
