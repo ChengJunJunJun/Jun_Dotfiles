@@ -5,6 +5,7 @@ DOTFILES_DIR="$HOME/Jun_Dotfiles"
 
 # 创建符号链接
 ln -sf "$DOTFILES_DIR/Mac/zsh/.zshrc" "$HOME/.zshrc"
+ln -sf "$DOTFILES_DIR/Mac/zsh/.zprofile" "$HOME/.zprofile"
 ln -sf "$DOTFILES_DIR/Mac/git/.gitconfig" "$HOME/.gitconfig"
 ln -sf "$DOTFILES_DIR/Mac/vim/.vimrc" "$HOME/.vimrc"
 ln -sf "$DOTFILES_DIR/Mac/config/nvim" "$HOME/.config/nvim"

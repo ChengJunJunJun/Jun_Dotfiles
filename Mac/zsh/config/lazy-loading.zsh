@@ -1,15 +1,19 @@
 # =============================================================================
-# 延迟加载配置
+# 延迟加载与智能环境（conda / uv / zoxide）
 # =============================================================================
 
-# 🔍 Zoxide 初始化
-if command -v zoxide > /dev/null 2>&1; then
-  eval "$(zoxide init zsh --cmd cd)"
+# ---------------------------------------------------------------------------
+# Zoxide：保留原生 cd，使用 z / zi 智能跳转
+# ---------------------------------------------------------------------------
+if (( ${+commands[zoxide]} )); then
+  eval "$(zoxide init zsh)"
 else
   echo "⚠️  Zoxide not found. Install with: brew install zoxide"
 fi
 
-# 🐍 Conda 延迟初始化
+# ---------------------------------------------------------------------------
+# Conda 延迟初始化
+# ---------------------------------------------------------------------------
 _init_conda() {
   local conda_exe conda_prefix __conda_setup candidate
 
@@ -43,7 +47,6 @@ _init_conda() {
   fi
 }
 
-# 只在使用 conda 命令时才初始化
 conda() {
   unfunction conda
   _init_conda
@@ -53,14 +56,20 @@ conda() {
   return $status
 }
 
-# 📦 UV 补全延迟加载
+# ---------------------------------------------------------------------------
+# UV 补全延迟加载
+# ---------------------------------------------------------------------------
 uv() {
   unfunction uv
-  eval "$(command uv generate-shell-completion zsh)"
+  if (( ${+commands[uv]} )); then
+    eval "$(command uv generate-shell-completion zsh)" 2>/dev/null
+  fi
   command uv "$@"
 }
 
-# 🐍 进入 uv 项目时自动激活本地 .venv，离开时自动退出
+# ---------------------------------------------------------------------------
+# 进入 uv 项目时自动激活本地 .venv，离开时自动退出
+# ---------------------------------------------------------------------------
 autoload -Uz add-zsh-hook
 
 _find_uv_project_root() {
@@ -68,6 +77,7 @@ _find_uv_project_root() {
 
   while [[ "$dir" != "/" ]]; do
     if [[ -f "$dir/pyproject.toml" && -d "$dir/.venv" && -f "$dir/.venv/bin/activate" ]]; then
+      # uv.lock 存在，或 pyproject 声明 [tool.uv]
       if [[ -f "$dir/uv.lock" ]] || command grep -q '^\[tool\.uv' "$dir/pyproject.toml" 2>/dev/null; then
         print -r -- "$dir"
         return 0
@@ -124,9 +134,11 @@ _auto_activate_uv_env() {
   if [[ -n "${_AUTO_UV_VIRTUAL_ENV:-}" && "${VIRTUAL_ENV:-}" == "${_AUTO_UV_VIRTUAL_ENV}" ]]; then
     _deactivate_auto_uv_env
   elif [[ -n "${VIRTUAL_ENV:-}" ]]; then
+    # 手动激活的其他 venv，不抢占
     return 0
   fi
 
+  # shellcheck disable=SC1091
   source "${venv_path}/bin/activate"
   _AUTO_UV_VIRTUAL_ENV="$venv_path"
   _AUTO_UV_PROJECT_ROOT="$project_root"
