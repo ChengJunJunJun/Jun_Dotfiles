@@ -1,54 +1,78 @@
 # =============================================================================
-# 插件管理配置
+# 插件管理（Zinit release 工具 + turbo 延迟加载）
 # =============================================================================
 
-# Zinit 初始化
-_zinit_path="$HOME/.local/share/zinit/zinit.git/zinit.zsh"
+typeset -ga _zinit_candidates=(
+  "$HOME/.local/share/zinit/zinit.git/zinit.zsh"
+  "$HOME/.local/share/zinit/zinit.zsh"
+)
 
-if [[ -r "$_zinit_path" ]]; then
-  source "$_zinit_path"
-fi
+for _zinit_path in "${_zinit_candidates[@]}"; do
+  if [[ -r "$_zinit_path" ]]; then
+    source "$_zinit_path"
+    break
+  fi
+done
+unset _zinit_candidates _zinit_path
 
 if (( ${+functions[zinit]} )); then
-  # 高性能插件配置
-  zinit light "zdharma-continuum/fast-syntax-highlighting"
-  zinit light "zsh-users/zsh-autosuggestions"
-  zinit light "zsh-users/zsh-history-substring-search"
-  zinit snippet "OMZ::plugins/git/git.plugin.zsh"
-  zinit light "zsh-users/zsh-completions"
-
-  # 命令行工具由 zinit binary snippets 管理
+  # apt 管理 fd/rg；Zinit 仅管理 apt 缺失或版本偏旧的 release 工具。
   zinit ice as"program" from"gh-r"
   zinit light "junegunn/fzf"
 
   zinit ice as"program" from"gh-r" pick"zoxide"
   zinit light "ajeetdsouza/zoxide"
 
-  zinit ice as"program" from"gh-r" mv"fd* -> fd" pick"fd/fd"
-  zinit light "@sharkdp/fd"
-
-  zinit ice as"program" from"gh-r" mv"ripgrep* -> ripgrep" pick"ripgrep/rg"
-  zinit light "BurntSushi/ripgrep"
-
-  # Starship 主题
+  # Starship 由 Zinit 下载，并缓存初始化脚本与补全。
   if [[ -o interactive && "${TERM:-}" != "dumb" ]]; then
     zinit ice as"command" from"gh-r" \
-          atclone"./starship init zsh > init.zsh; ./starship completions zsh > _starship" \
-          atpull"%atclone" src"init.zsh"
+      atclone'./starship init zsh > init.zsh; ./starship completions zsh > _starship' \
+      atpull'%atclone' src"init.zsh"
     zinit light "starship/starship"
   fi
 
-  # 快捷键优化 (在插件加载后设置)
+  typeset -gA ZINIT
+  ZINIT[ZCOMPDUMP_PATH]="${ZSH_COMPDUMP}"
+
+  # 自动建议和补全先就绪，语法高亮最后触发 compinit / zicdreplay。
+  zinit wait lucid light-mode for \
+    atload'_zsh_autosuggest_start' \
+      zsh-users/zsh-autosuggestions \
+    blockf atpull'zinit creinstall -q .' \
+      zsh-users/zsh-completions \
+    atinit'_zsh_run_compinit; zicdreplay' \
+      zdharma-continuum/fast-syntax-highlighting
+
+  zinit wait lucid light-mode for \
+    zsh-users/zsh-history-substring-search \
+    OMZP::git
+
   zinit wait lucid atload'
     bindkey "^[[A" history-substring-search-up
     bindkey "^[[B" history-substring-search-down
+    bindkey "^[OA" history-substring-search-up
+    bindkey "^[OB" history-substring-search-down
     bindkey "^U" backward-kill-line
   ' for zdharma-continuum/null
-elif [[ -o interactive && "${TERM:-}" != "dumb" ]] && command -v starship >/dev/null 2>&1; then
-  eval "$(starship init zsh)"
-  echo "Zinit not found. Loaded only Starship prompt."
-else
-  echo "Zinit not found. Run: bash ~/Jun_Dotfiles/Linux/zsh/install.sh"
-fi
 
-unset _zinit_path
+  # turbo 在首次 prompt 触发；若钩子异常则由一次性 precmd 初始化补全。
+  typeset -g _ZSH_COMPINIT_DEFERRED=1
+  _zsh_compinit_fallback() {
+    if [[ -n "${_ZSH_COMPINIT_DEFERRED:-}" ]]; then
+      (( ${+functions[_zsh_run_compinit]} )) && _zsh_run_compinit
+    fi
+    precmd_functions=(${precmd_functions:#_zsh_compinit_fallback})
+    unset _ZSH_COMPINIT_DEFERRED
+    unfunction _zsh_compinit_fallback 2>/dev/null
+  }
+  precmd_functions=(${precmd_functions:#_zsh_compinit_fallback})
+  precmd_functions=(_zsh_compinit_fallback ${precmd_functions[@]})
+else
+  echo "⚠️  Zinit not found. Run: bash ~/Jun_Dotfiles/Linux/zsh/install.sh"
+
+  if [[ -o interactive && "${TERM:-}" != "dumb" ]] && (( ${+commands[starship]} )); then
+    eval "$(starship init zsh)"
+  fi
+
+  (( ${+functions[_zsh_run_compinit]} )) && _zsh_run_compinit
+fi

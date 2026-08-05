@@ -4,6 +4,7 @@
 
 # Neovim Lazy 插件管理器生成的锁定文件
 Mac/config/nvim/lazy-lock.json
+Linux/config/nvim/lazy-lock.json
 
 # Neovim 数据目录（如果存在）
 Mac/config/nvim/plugin/

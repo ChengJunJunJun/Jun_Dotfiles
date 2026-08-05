@@ -54,7 +54,7 @@ run_as_root() {
 }
 
 install_packages() {
-  local packages=(zsh git curl ca-certificates)
+  local packages=(zsh git curl ca-certificates fd-find ripgrep)
   local missing=()
   local package
 
@@ -140,6 +140,19 @@ ensure_link() {
   printf 'Created link: %s -> %s\n' "$link_path" "$target_path"
 }
 
+ensure_fd_command() {
+  local fdfind_path
+
+  if command -v fdfind >/dev/null 2>&1; then
+    fdfind_path="$(command -v fdfind)"
+    ensure_link "$fdfind_path" "$HOME/.local/bin/fd"
+  elif command -v fd >/dev/null 2>&1; then
+    printf 'fd command already available: %s\n' "$(command -v fd)"
+  else
+    printf 'fd is unavailable. Run without --skip-packages to install fd-find.\n' >&2
+  fi
+}
+
 install_zinit() {
   mkdir -p "$ZINIT_HOME"
 
@@ -192,6 +205,7 @@ main() {
 
   ensure_link "$ZSHRC_TARGET" "$ZSHRC_LINK"
   ensure_link "$STARSHIP_TARGET" "$STARSHIP_LINK"
+  ensure_fd_command
 
   if [ "$SKIP_ZINIT" -eq 0 ]; then
     install_zinit

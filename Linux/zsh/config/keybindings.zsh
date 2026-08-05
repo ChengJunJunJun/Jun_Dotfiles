@@ -17,12 +17,18 @@ bind_in_keymaps() {
 
 # Alt+Backspace 删除前一个单词
 bind_in_keymaps '^[^?' backward-kill-word
+# 部分终端会发送 ^[^H
+bind_in_keymaps '^[^H' backward-kill-word
 
 # Alt+Left 按单词向左移动（兼容 CSI 1;3D 序列）
 bind_in_keymaps '^[[1;3D' backward-word
 
 # Alt+Right 按单词向右移动（兼容 CSI 1;3C 序列）
 bind_in_keymaps '^[[1;3C' forward-word
+
+# Alt 作为 Meta 时的常见序列
+bind_in_keymaps '^[b' backward-word
+bind_in_keymaps '^[f' forward-word
 
 # showkeys：输出按键实际发给 zsh 的转义序列，便于调试终端快捷键
 showkeys() {

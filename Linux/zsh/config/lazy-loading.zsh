@@ -1,23 +1,77 @@
 # =============================================================================
-# 延迟加载配置
+# 延迟加载与智能环境（conda / uv / zoxide）
 # =============================================================================
 
-# Zoxide 初始化
-if command -v zoxide > /dev/null 2>&1; then
-  eval "$(zoxide init zsh --cmd cd)"
+# Zoxide：保留原生 cd，使用 z / zi 智能跳转
+if (( ${+commands[zoxide]} )); then
+  eval "$(zoxide init zsh)"
 else
-  echo "Zoxide not found. Run the zinit install phase from Linux/zsh/install.sh."
+  echo "⚠️  Zoxide not found. Run the Zinit install phase from Linux/zsh/install.sh."
 fi
 
-# UV 补全延迟加载
+# Conda 延迟初始化
+_init_conda() {
+  local conda_exe conda_prefix __conda_setup candidate
+
+  for candidate in \
+    "${CONDA_EXE:-}" \
+    /opt/miniconda3/bin/conda \
+    "$HOME/miniconda3/bin/conda" \
+    "$HOME/anaconda3/bin/conda" \
+    /opt/conda/bin/conda; do
+    if [[ -n "$candidate" && -x "$candidate" ]]; then
+      conda_exe="$candidate"
+      break
+    fi
+  done
+
+  [[ -n "$conda_exe" ]] || {
+    echo "⚠️  Conda not found. Install Miniconda or set CONDA_EXE."
+    return 127
+  }
+  conda_prefix="${conda_exe:h:h}"
+
+  __conda_setup="$("$conda_exe" shell.zsh hook 2>/dev/null)"
+  if [[ $? -eq 0 ]]; then
+    eval "$__conda_setup"
+  elif [[ -f "${conda_prefix}/etc/profile.d/conda.sh" ]]; then
+    source "${conda_prefix}/etc/profile.d/conda.sh"
+  else
+    export PATH="${conda_prefix}/bin:$PATH"
+  fi
+}
+
+_lazy_conda_command() {
+  local command_status
+
+  unfunction conda 2>/dev/null
+  _init_conda
+  command_status=$?
+
+  if (( command_status != 0 )); then
+    conda() { _lazy_conda_command "$@" }
+    return $command_status
+  fi
+
+  conda "$@"
+  command_status=$?
+  (( ${+functions[normalize_path_entries]} )) && normalize_path_entries
+  return $command_status
+}
+
+conda() {
+  _lazy_conda_command "$@"
+}
+
+# UV 补全延迟加载；命令缺失时保留 wrapper，安装后无需重启 shell。
 uv() {
-  if ! command -v uv >/dev/null 2>&1; then
-    echo "uv not found. Install uv before using this command."
+  if ! (( ${+commands[uv]} )); then
+    echo "⚠️  uv not found. Install uv before using this command."
     return 127
   fi
 
   unfunction uv
-  eval "$(command uv generate-shell-completion zsh)"
+  eval "$(command uv generate-shell-completion zsh)" 2>/dev/null
   command uv "$@"
 }
 
@@ -88,6 +142,7 @@ _auto_activate_uv_env() {
     return 0
   fi
 
+  # shellcheck disable=SC1091
   source "${venv_path}/bin/activate"
   _AUTO_UV_VIRTUAL_ENV="$venv_path"
   _AUTO_UV_PROJECT_ROOT="$project_root"
