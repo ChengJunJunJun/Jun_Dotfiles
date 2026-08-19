@@ -23,7 +23,7 @@ up() {
 
 # 卸载 cask 并 zap 残留（故意不用通用名 uninstall）
 alias brew-zap='brew uninstall --cask --force --zap'
-alias update-ai='npm update -g @anthropic-ai/claude-code @openai/codex; grok update'
+alias update-ai='npm update -g --allow-scripts=@anthropic-ai/claude-code,hexo-util @anthropic-ai/claude-code @openai/codex; grok update'
 
 # 刷新 DNS 缓存
 alias refresh='sudo dscacheutil -flushcache; sudo killall -HUP mDNSResponder'

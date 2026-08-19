@@ -5,34 +5,17 @@
 # Emacs 风格键位，与大多数终端默认习惯一致
 bindkey -e
 
-# 将同一快捷键绑定到多个常用 keymap，避免被模式切换或插件影响
-bind_in_keymaps() {
-  local sequence="$1"
-  local widget="$2"
-
-  bindkey -M emacs "$sequence" "$widget"
-  bindkey -M viins "$sequence" "$widget"
-  bindkey -M main "$sequence" "$widget"
-}
-
-# Option+Backspace 删除前一个单词
-bind_in_keymaps '^[^?' backward-kill-word
-# 部分终端 Option+Backspace 发 ^[^H
-bind_in_keymaps '^[^H' backward-kill-word
-
-# Option+Left / Right（CSI 1;3D / 1;3C）
-bind_in_keymaps '^[[1;3D' backward-word
-bind_in_keymaps '^[[1;3C' forward-word
-
-# Option 作 Meta 时常见序列
-bind_in_keymaps '^[b' backward-word
-bind_in_keymaps '^[f' forward-word
+# 同一序列绑到多个 keymap，避免被模式切换或插件影响：
+# Option+Backspace（^[^?，部分终端发 ^[^H）、Option+←/→、Option 作 Meta
+for _kb in '^[^?:backward-kill-word' '^[^H:backward-kill-word' \
+           '^[[1;3D:backward-word'   '^[[1;3C:forward-word' \
+           '^[b:backward-word'       '^[f:forward-word'; do
+  for _km in emacs viins main; do bindkey -M $_km "${_kb%%:*}" "${_kb#*:}"; done
+done
+unset _kb _km
 
 # showkeys：输出按键实际发给 zsh 的转义序列，便于调试终端快捷键
 showkeys() {
-  printf 'Press keys (Ctrl-C to quit)\n'
-  while true; do
-    IFS= read -rs -k1 key || break
-    printf '%q\n' "$key"
-  done
+  print 'Press keys (Ctrl-C to quit)'
+  while IFS= read -rs -k1 key; do printf '%q\n' "$key"; done
 }

@@ -1,79 +1,66 @@
 # =============================================================================
-# 插件管理（Zinit turbo + Starship）
+# 提示符 + 插件
+# 用 zsh 原生的 zle -F 取代 zinit turbo：回调只在首个提示符已画出、
+# ZLE 进入空闲时触发，效果等价，但省掉 zinit 自身 23.5ms 的 source 开销。
+# 插件由 Homebrew 提供，更新随 up() 里的 brew upgrade 一起走。
 # =============================================================================
 
-typeset -ga _zinit_candidates=(
-  /opt/homebrew/opt/zinit/zinit.zsh
-  /usr/local/opt/zinit/zinit.zsh
-  "$HOME/.local/share/zinit/zinit.git/zinit.zsh"
-  "$HOME/.local/share/zinit/zinit.zsh"
-)
-
-for _zinit_path in "${_zinit_candidates[@]}"; do
-  if [[ -r "$_zinit_path" ]]; then
-    source "$_zinit_path"
-    break
+# Starship：缓存 init 输出并编译成 .zwc
+# （starship init zsh 子进程 5.4ms；source 未编译的输出 13.7ms → 编译后 10.3ms）
+_sb="$HOMEBREW_PREFIX/bin/starship"
+[[ -x "$_sb" ]] || _sb="${commands[starship]}"
+if [[ -n "$_sb" ]]; then
+  _sc="$ZSH_CACHE_DIR/starship.zsh"
+  if [[ ! -s "$_sc" || "$_sb" -nt "$_sc" ]]; then
+    "$_sb" init zsh >| "$_sc"
+    zcompile -R "$_sc" 2>/dev/null
   fi
-done
-unset _zinit_candidates _zinit_path
-
-# ---------------------------------------------------------------------------
-# Starship：优先 Homebrew，避免与 zinit gh-r 双轨
-# ---------------------------------------------------------------------------
-if (( ${+commands[starship]} )); then
-  eval "$(starship init zsh)"
-elif [[ -x /opt/homebrew/bin/starship ]]; then
-  eval "$(/opt/homebrew/bin/starship init zsh)"
-elif [[ -x /usr/local/bin/starship ]]; then
-  eval "$(/usr/local/bin/starship init zsh)"
+  source "$_sc"
 else
-  echo "⚠️  Starship not found. Install with: brew install starship"
+  print -u2 "⚠️  Starship not found. Install with: brew install starship"
 fi
+unset _sb _sc
+
+[[ -o interactive ]] || return 0
 
 # ---------------------------------------------------------------------------
-# Zinit 插件（turbo 延迟加载）
-# - autosuggestions / completions 先加载
-# - fsh 最后；其 atinit 触发 compinit + zicdreplay
+# 首个提示符画出后统一加载重量级组件
 # ---------------------------------------------------------------------------
-if (( ${+functions[zinit]} )); then
-  typeset -gA ZINIT
-  ZINIT[ZCOMPDUMP_PATH]="${ZSH_COMPDUMP}"
+_zsh_defer_run() {
+  local fd=$1 f
+  zle -F $fd
+  exec {fd}<&-
 
-  zinit wait lucid light-mode for \
-    atload'_zsh_autosuggest_start' \
-      zsh-users/zsh-autosuggestions \
-    blockf atpull'zinit creinstall -q .' \
-      zsh-users/zsh-completions \
-    atinit'_zsh_run_compinit; zicdreplay' \
-      zdharma-continuum/fast-syntax-highlighting
+  # 必须最先：之后 zdefer 队列与插件里的 compdef 才真正生效
+  _zsh_run_compinit
 
-  zinit wait lucid light-mode for \
-    zsh-users/zsh-history-substring-search \
-    OMZP::git
+  for f in "$HOMEBREW_PREFIX/share/zsh-autosuggestions/zsh-autosuggestions.zsh" \
+           "$HOMEBREW_PREFIX/share/zsh-history-substring-search/zsh-history-substring-search.zsh"; do
+    [[ -r "$f" ]] && source "$f"
+  done
 
-  # 插件就绪后绑定历史子串搜索与 ^U
-  zinit wait lucid atload'
-    bindkey "^[[A" history-substring-search-up
-    bindkey "^[[B" history-substring-search-down
-    bindkey "^[OA" history-substring-search-up
-    bindkey "^[OB" history-substring-search-down
-    bindkey "^U" backward-kill-line
-  ' for zdharma-continuum/null
+  for f in "${_zsh_defer_cmds[@]}"; do eval "$f"; done   # fzf / zoxide
+  unset _zsh_defer_cmds
+  unfunction zdefer
 
-  # turbo 在首次 prompt 触发；若异常未跑 compinit，用一次性 precmd 兜底
-  typeset -g _ZSH_COMPINIT_DEFERRED=1
-  _zsh_compinit_fallback() {
-    if [[ -n ${_ZSH_COMPINIT_DEFERRED:-} ]] && ! (( ${+_comps[brew]} || ${+_comps[git]} )); then
-      (( ${+functions[_zsh_run_compinit]} )) && _zsh_run_compinit
-    fi
-    precmd_functions=(${precmd_functions:#_zsh_compinit_fallback})
-    unset _ZSH_COMPINIT_DEFERRED
-    unfunction _zsh_compinit_fallback 2>/dev/null
-  }
-  precmd_functions=(_zsh_compinit_fallback ${precmd_functions[@]})
-else
-  echo "⚠️  Zinit not found. Install with: brew install zinit"
-  if (( ${+functions[_zsh_run_compinit]} )); then
-    _zsh_run_compinit
+  # fast-syntax-highlighting 必须最后：它会包装此前注册的所有 ZLE widget
+  f="$HOMEBREW_PREFIX/opt/zsh-fast-syntax-highlighting/share/zsh-fast-syntax-highlighting/fast-syntax-highlighting.plugin.zsh"
+  [[ -r "$f" ]] && source "$f"
+
+  (( ${+functions[_zsh_autosuggest_start]} )) && _zsh_autosuggest_start
+  if (( ${+widgets[history-substring-search-up]} )); then
+    bindkey '^[[A' history-substring-search-up
+    bindkey '^[[B' history-substring-search-down
+    bindkey '^[OA' history-substring-search-up
+    bindkey '^[OB' history-substring-search-down
   fi
-fi
+  bindkey '^U' backward-kill-line
+
+  unfunction _zsh_defer_run
+  zle -R
+}
+
+# /dev/null 立即可读，zle -F 会在首个提示符画出、ZLE 空闲时回调；
+# 比 <(:) 少一次 fork
+exec {_zsh_defer_fd}< /dev/null
+zle -F $_zsh_defer_fd _zsh_defer_run

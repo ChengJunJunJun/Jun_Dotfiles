@@ -1,64 +1,73 @@
 # =============================================================================
-# 基础性能 / 历史 / 行为选项（compinit 由 plugins 触发）
+# Shell 核心：fpath / 历史 / setopt / 补全样式
+# compinit 本身由 plugins.zsh 的延迟执行器在首个提示符后调用
 # =============================================================================
 
-# 确保缓存与状态目录存在
-mkdir -p "${ZSH_CACHE_DIR}" "${ZSH_STATE_DIR}" 2>/dev/null
+# 目录通常已存在；先判断可省掉每次启动一次 fork（mkdir -p 实测 4.1ms）
+[[ -d "$ZSH_CACHE_DIR" && -d "$ZSH_STATE_DIR" ]] || mkdir -p "$ZSH_CACHE_DIR" "$ZSH_STATE_DIR" 2>/dev/null
 
-# ---------------------------------------------------------------------------
-# fpath：Homebrew / 用户补全目录（必须在 compinit 之前）
-# ---------------------------------------------------------------------------
+# fpath：Homebrew 与用户补全目录（必须在 compinit 之前）
 typeset -gU fpath
-
-# Apple Silicon / Intel Homebrew site-functions
-for _site in \
-  /opt/homebrew/share/zsh/site-functions \
-  /usr/local/share/zsh/site-functions; do
-  [[ -d "$_site" ]] && fpath=("$_site" $fpath)
+for _fd in "$HOMEBREW_PREFIX/share/zsh/site-functions" \
+           "$HOMEBREW_PREFIX/share/zsh-completions" \
+           "$HOME/.grok/completions/zsh"; do
+  [[ -d "$_fd" ]] && fpath=("$_fd" $fpath)
 done
-unset _site
-
-# Grok CLI 补全
-if [[ -d "$HOME/.grok/completions/zsh" ]]; then
-  fpath=("$HOME/.grok/completions/zsh" $fpath)
-fi
+unset _fd
 
 # ---------------------------------------------------------------------------
 # 历史记录（XDG state）
+# 不与 SHARE_HISTORY 叠用 INC_APPEND_HISTORY，避免交错异常
 # ---------------------------------------------------------------------------
 HISTFILE="${ZSH_STATE_DIR}/history"
 HISTSIZE=100000
 SAVEHIST=100000
+setopt EXTENDED_HISTORY SHARE_HISTORY HIST_IGNORE_SPACE HIST_IGNORE_DUPS \
+       HIST_IGNORE_ALL_DUPS HIST_SAVE_NO_DUPS HIST_EXPIRE_DUPS_FIRST \
+       HIST_VERIFY HIST_REDUCE_BLANKS APPEND_HISTORY
 
-setopt EXTENDED_HISTORY       # 记录时间戳
-setopt SHARE_HISTORY          # 多会话共享历史
-setopt HIST_IGNORE_SPACE      # 忽略以空格开头的命令
-setopt HIST_IGNORE_DUPS       # 不记录连续重复
-setopt HIST_IGNORE_ALL_DUPS   # 删除旧的重复条目
-setopt HIST_SAVE_NO_DUPS      # 写入时不保存重复
-setopt HIST_EXPIRE_DUPS_FIRST # 淘汰时优先丢重复
-setopt HIST_VERIFY            # 历史展开先显示再执行
-setopt HIST_REDUCE_BLANKS     # 压缩多余空白
-setopt APPEND_HISTORY         # 追加而非覆盖
+# AUTO_CD 目录名即 cd／# 注释／扩展 glob／管道返回失败状态／静音／词中补全／补全后到词尾
+setopt AUTO_CD INTERACTIVE_COMMENTS EXTENDED_GLOB PIPE_FAIL NO_BEEP \
+       COMPLETE_IN_WORD ALWAYS_TO_END
 
-# 不与 SHARE_HISTORY 叠用 INC_APPEND_HISTORY，避免交错异常
-
-# ---------------------------------------------------------------------------
-# 常用交互选项
-# ---------------------------------------------------------------------------
-setopt AUTO_CD                # 输入目录名即可 cd
-setopt INTERACTIVE_COMMENTS   # 交互模式支持 #
-setopt EXTENDED_GLOB          # 扩展 glob
-setopt PIPE_FAIL              # 管道返回失败命令状态
-setopt NO_BEEP                # 关闭蜂鸣
-setopt COMPLETE_IN_WORD       # 词中也可补全
-setopt ALWAYS_TO_END          # 补全后光标到词尾
-
-# ---------------------------------------------------------------------------
 # 光标：竖线（beam）
+_set_cursor() { print -n '\e[5 q' }
+precmd_functions=(${precmd_functions:#_set_cursor} _set_cursor)
+
 # ---------------------------------------------------------------------------
-_set_cursor() {
-  print -n '\e[5 q'
+# 补全样式
+# ---------------------------------------------------------------------------
+zstyle ':completion:*' matcher-list 'm:{[:lower:][:upper:]}={[:upper:][:lower:]}' 'r:|=*' 'l:|=* r:|=*'
+zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
+zstyle ':completion:*' completer _complete _match _approximate
+zstyle ':completion:*' cache-path "$ZSH_CACHE_DIR"
+zstyle ':completion:*' menu select
+zstyle ':completion:*' use-cache on
+zstyle ':completion:*' rehash true
+zstyle ':completion:*' group-name ''
+zstyle ':completion:*' special-dirs false
+zstyle ':completion:*' squeeze-slashes true
+zstyle ':completion:*' verbose yes
+zstyle ':completion:*:match:*' original only
+zstyle ':completion:*:approximate:*' max-errors 1 numeric
+zstyle ':completion:*:cd:*' ignore-parents parent pwd
+zstyle ':completion:*:history-words' stop yes
+zstyle ':completion:*:history-words' remove-all-dups yes
+zstyle ':completion:*:history-words' list false
+zstyle ':completion:*:history-words' menu yes
+zstyle ':completion:*:descriptions' format '%F{yellow}-- %d --%f'
+zstyle ':completion:*:messages' format '%d'
+zstyle ':completion:*:warnings' format '%F{red}No matches for: %d%f'
+zstyle ':completion:*:corrections' format '%B%d (errors: %e)%b'
+
+# 安全的 compinit：文件缺失或超过 24h 时全量重建，否则 -C 跳过检查。
+# 末尾编译成 .zwc：实测 compinit -C 由 12.8ms 降到 5.8ms。
+_zsh_run_compinit() {
+  autoload -Uz compinit
+  if [[ ! -f "$ZSH_COMPDUMP" || -n "$ZSH_COMPDUMP"(#qN.mh+24) ]]; then
+    compinit -d "$ZSH_COMPDUMP"
+  else
+    compinit -C -d "$ZSH_COMPDUMP"
+  fi
+  [[ "$ZSH_COMPDUMP.zwc" -nt "$ZSH_COMPDUMP" ]] || zcompile -R "$ZSH_COMPDUMP" 2>/dev/null
 }
-precmd_functions=(${precmd_functions:#_set_cursor})
-precmd_functions+=(_set_cursor)

@@ -1,69 +1,45 @@
 # =============================================================================
-# 延迟加载与智能环境（conda / uv / zoxide）
+# 延迟加载与智能环境（zoxide / conda / uv）
 # =============================================================================
 
-# ---------------------------------------------------------------------------
-# Zoxide：保留原生 cd，使用 z / zi 智能跳转
-# ---------------------------------------------------------------------------
-if (( ${+commands[zoxide]} )); then
-  eval "$(zoxide init zsh)"
+# Zoxide：保留原生 cd，用 z / zi 智能跳转。
+# 排进 zdefer 而非直接 eval——zoxide 的 compdef 需要 compinit 已跑完才生效。
+if [[ -x "$HOMEBREW_PREFIX/bin/zoxide" ]] || (( ${+commands[zoxide]} )); then
+  zdefer 'eval "$(zoxide init zsh)"'
 else
-  echo "⚠️  Zoxide not found. Install with: brew install zoxide"
+  print -u2 "⚠️  Zoxide not found. Install with: brew install zoxide"
 fi
 
 # ---------------------------------------------------------------------------
-# Conda 延迟初始化
+# Conda：首次调用才初始化
 # ---------------------------------------------------------------------------
-_init_conda() {
-  local conda_exe conda_prefix __conda_setup candidate
-
-  for candidate in \
-    "${CONDA_EXE:-}" \
-    /opt/miniconda3/bin/conda \
-    "$HOME/miniconda3/bin/conda" \
-    /opt/homebrew/Caskroom/miniconda/base/bin/conda \
-    /usr/local/Caskroom/miniconda/base/bin/conda; do
-    if [[ -n "$candidate" && -x "$candidate" ]]; then
-      conda_exe="$candidate"
-      break
-    fi
-  done
-
-  [[ -n "$conda_exe" ]] || {
-    echo "⚠️  Conda not found. Install Miniconda or set CONDA_EXE."
-    return 127
-  }
-  conda_prefix="${conda_exe:h:h}"
-
-  __conda_setup="$("$conda_exe" shell.zsh hook 2> /dev/null)"
-  if [ $? -eq 0 ]; then
-    eval "$__conda_setup"
-  else
-    if [ -f "${conda_prefix}/etc/profile.d/conda.sh" ]; then
-      . "${conda_prefix}/etc/profile.d/conda.sh"
-    else
-      export PATH="${conda_prefix}/bin:$PATH"
-    fi
-  fi
-}
-
 conda() {
   unfunction conda
-  _init_conda
+  local exe ret
+  for exe in "${CONDA_EXE:-}" /opt/miniconda3/bin/conda "$HOME/miniconda3/bin/conda" \
+             "$HOMEBREW_PREFIX/Caskroom/miniconda/base/bin/conda"; do
+    [[ -n "$exe" && -x "$exe" ]] && break
+    exe=""
+  done
+  if [[ -z "$exe" ]]; then
+    print -u2 "⚠️  Conda not found. Install Miniconda or set CONDA_EXE."
+    return 127
+  fi
+
+  eval "$("$exe" shell.zsh hook 2>/dev/null)" 2>/dev/null \
+    || source "${exe:h:h}/etc/profile.d/conda.sh" 2>/dev/null \
+    || path=("${exe:h}" $path)
+
   conda "$@"
-  local status=$?
-  (( ${+functions[normalize_path_entries]} )) && normalize_path_entries
-  return $status
+  ret=$?   # 不能用 status：zsh 中它是只读特殊变量
+  normalize_path_entries
+  return $ret
 }
 
-# ---------------------------------------------------------------------------
-# UV 补全延迟加载
-# ---------------------------------------------------------------------------
+# UV：首次调用才加载补全
 uv() {
   unfunction uv
-  if (( ${+commands[uv]} )); then
-    eval "$(command uv generate-shell-completion zsh)" 2>/dev/null
-  fi
+  eval "$(command uv generate-shell-completion zsh)" 2>/dev/null
   command uv "$@"
 }
 
@@ -72,78 +48,39 @@ uv() {
 # ---------------------------------------------------------------------------
 autoload -Uz add-zsh-hook
 
-_find_uv_project_root() {
-  local dir="$PWD"
+_auto_uv_deactivate() {
+  [[ -n "${_AUTO_UV_VENV:-}" ]] || return 0
+  if [[ "${VIRTUAL_ENV:-}" == "$_AUTO_UV_VENV" ]]; then
+    (( ${+functions[deactivate]} )) && deactivate >/dev/null 2>&1
+    unset VIRTUAL_ENV VIRTUAL_ENV_PROMPT PYTHONHOME
+  fi
+  path=(${path:#$_AUTO_UV_VENV/bin})
+  unset _AUTO_UV_VENV
+  normalize_path_entries
+}
 
-  while [[ "$dir" != "/" ]]; do
-    if [[ -f "$dir/pyproject.toml" && -d "$dir/.venv" && -f "$dir/.venv/bin/activate" ]]; then
-      # uv.lock 存在，或 pyproject 声明 [tool.uv]
-      if [[ -f "$dir/uv.lock" ]] || command grep -q '^\[tool\.uv' "$dir/pyproject.toml" 2>/dev/null; then
-        print -r -- "$dir"
+_auto_uv_activate() {
+  local dir="$PWD"
+  while [[ "$dir" != / ]]; do
+    if [[ -f "$dir/pyproject.toml" && -f "$dir/.venv/bin/activate" ]] &&
+       { [[ -f "$dir/uv.lock" ]] ||
+         command grep -q '^\[tool\.uv' "$dir/pyproject.toml" 2>/dev/null }; then
+      # 已经在这个 .venv 里（含手动激活）：接管它，离开目录时负责退出
+      if [[ "${VIRTUAL_ENV:-}" == "$dir/.venv" ]]; then
+        typeset -gx _AUTO_UV_VENV="$dir/.venv"
         return 0
       fi
+      # 手动激活的其他 venv，不抢占
+      [[ -n "${VIRTUAL_ENV:-}" && -z "${_AUTO_UV_VENV:-}" ]] && return 0
+      _auto_uv_deactivate
+      source "$dir/.venv/bin/activate"
+      typeset -gx _AUTO_UV_VENV="$dir/.venv"
+      return 0
     fi
     dir="${dir:h}"
   done
-
-  return 1
+  _auto_uv_deactivate
 }
 
-_deactivate_auto_uv_env() {
-  local auto_venv_bin
-
-  if [[ -z "${_AUTO_UV_VIRTUAL_ENV:-}" && -n "${VIRTUAL_ENV:-}" && "${VIRTUAL_ENV:t}" == ".venv" ]]; then
-    _AUTO_UV_VIRTUAL_ENV="${VIRTUAL_ENV}"
-    export _AUTO_UV_VIRTUAL_ENV
-  fi
-
-  [[ -n "${_AUTO_UV_VIRTUAL_ENV:-}" ]] || return 0
-  auto_venv_bin="${_AUTO_UV_VIRTUAL_ENV}/bin"
-
-  if [[ "${VIRTUAL_ENV:-}" == "${_AUTO_UV_VIRTUAL_ENV}" ]] && (( ${+functions[deactivate]} )); then
-    deactivate >/dev/null 2>&1
-  fi
-
-  path=(${path:#$auto_venv_bin})
-  export PATH
-
-  [[ "${VIRTUAL_ENV:-}" == "${_AUTO_UV_VIRTUAL_ENV}" ]] && unset VIRTUAL_ENV VIRTUAL_ENV_PROMPT PYTHONHOME
-  (( ${+functions[normalize_path_entries]} )) && normalize_path_entries
-  hash -r 2>/dev/null
-
-  unset _AUTO_UV_VIRTUAL_ENV _AUTO_UV_PROJECT_ROOT
-}
-
-_auto_activate_uv_env() {
-  local project_root venv_path
-
-  project_root="$(_find_uv_project_root)" || {
-    _deactivate_auto_uv_env
-    return 0
-  }
-
-  venv_path="${project_root}/.venv"
-
-  if [[ "${VIRTUAL_ENV:-}" == "$venv_path" ]]; then
-    _AUTO_UV_VIRTUAL_ENV="$venv_path"
-    _AUTO_UV_PROJECT_ROOT="$project_root"
-    export _AUTO_UV_VIRTUAL_ENV _AUTO_UV_PROJECT_ROOT
-    return 0
-  fi
-
-  if [[ -n "${_AUTO_UV_VIRTUAL_ENV:-}" && "${VIRTUAL_ENV:-}" == "${_AUTO_UV_VIRTUAL_ENV}" ]]; then
-    _deactivate_auto_uv_env
-  elif [[ -n "${VIRTUAL_ENV:-}" ]]; then
-    # 手动激活的其他 venv，不抢占
-    return 0
-  fi
-
-  # shellcheck disable=SC1091
-  source "${venv_path}/bin/activate"
-  _AUTO_UV_VIRTUAL_ENV="$venv_path"
-  _AUTO_UV_PROJECT_ROOT="$project_root"
-  export _AUTO_UV_VIRTUAL_ENV _AUTO_UV_PROJECT_ROOT
-}
-
-add-zsh-hook chpwd _auto_activate_uv_env
-_auto_activate_uv_env
+add-zsh-hook chpwd _auto_uv_activate
+_auto_uv_activate
