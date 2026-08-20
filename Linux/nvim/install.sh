@@ -60,6 +60,7 @@ install_packages() {
     build-essential
     ripgrep
     fd-find
+    jq
     nodejs
     python3-venv
     python3-pip
@@ -263,6 +264,29 @@ install_lazygit() {
   printf 'Install lazygit manually to enable the <leader>gg Neovim shortcut.\n' >&2
 }
 
+install_ruff() {
+  if command -v ruff >/dev/null 2>&1; then
+    printf 'ruff already available: %s\n' "$(command -v ruff)"
+    return
+  fi
+
+  # ruff 同时承担 Python 的 lint、格式化和 LSP，是这套配置的必需依赖
+  if command -v uv >/dev/null 2>&1; then
+    printf 'Installing ruff via uv.\n'
+    uv tool install ruff
+    return
+  fi
+
+  if command -v pip3 >/dev/null 2>&1; then
+    printf 'Installing ruff via pip3 --user.\n'
+    pip3 install --user ruff
+    return
+  fi
+
+  printf 'Could not install ruff automatically.\n' >&2
+  printf 'Install it manually, otherwise Python lint/format will not work.\n' >&2
+}
+
 print_next_steps() {
   local asset_arch="$1"
   local nvim_bin_dir="/opt/nvim-linux-${asset_arch}/bin"
@@ -271,6 +295,7 @@ print_next_steps() {
   printf '  1. Open a new shell so zsh reloads PATH from Linux/zsh/config/environment.zsh.\n'
   printf '  2. Or update this shell now with: export PATH="%s:$PATH"\n' "$nvim_bin_dir"
   printf '  3. Start Neovim and let lazy.nvim install plugins: nvim\n'
+  printf '  4. Open a .py file once so mason installs ty (Python type checker).\n'
 }
 
 main() {
@@ -293,6 +318,7 @@ main() {
 
   ensure_fd_command
   install_lazygit
+  install_ruff
   ensure_link "$NVIM_CONFIG_TARGET" "$NVIM_CONFIG_LINK"
 
   printf 'Neovim config installation complete.\n'

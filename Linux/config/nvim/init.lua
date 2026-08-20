@@ -1,10 +1,11 @@
--- ⚡ 性能优化的 Neovim 配置
+-- ⚡ 性能优先的 Neovim 配置（Neovim 0.12+）
+-- 主力场景：JSON 配置文件 + Python
+-- 设计原则：启动路径上只做必须做的事，其余全部延迟到真正用到的那一刻
 
--- 🚀 启动性能优化
 vim.g.mapleader = " "
 vim.g.maplocalleader = "\\"
 
--- 禁用一些内置插件以提升启动速度
+-- 禁用内置的远古 vim 插件（这些用 vim.g 关，lazy 的 rtp.disabled_plugins 管不到全部）
 vim.g.loaded_gzip = 1
 vim.g.loaded_zip = 1
 vim.g.loaded_zipPlugin = 1
@@ -22,26 +23,18 @@ vim.g.loaded_netrwPlugin = 1
 vim.g.loaded_netrwSettings = 1
 vim.g.loaded_netrwFileHandlers = 1
 
--- 基础配置
+-- 选项必须在启动时设置（影响后续所有 buffer 的创建）
 require("config.options")
-require("config.keymaps")
-require("config.autocmds")
 
--- ⚡ 性能优化设置
-vim.opt.termguicolors = true
-vim.opt.timeoutlen = 300
-vim.opt.updatetime = 250
-vim.opt.redrawtime = 10000
-
--- 光标设置
-vim.opt.guicursor = {
-  'n-v-c:ver25-Cursor/lCursor',
-  'i-ci-ve:ver25-Cursor/lCursor',
-  'r-cr:hor20',
-  'o:hor50',
-  'a:blinkwait700-blinkoff400-blinkon250-Cursor/lCursor',
-  'sm:block-blinkwait175-blinkoff150-blinkon175'
-}
+-- keymaps / autocmds 不影响首屏渲染，推迟到 UI 出来之后再加载
+vim.api.nvim_create_autocmd("User", {
+  pattern = "VeryLazy",
+  once = true,
+  callback = function()
+    require("config.keymaps")
+    require("config.autocmds")
+  end,
+})
 
 -- Bootstrap lazy.nvim
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
@@ -60,38 +53,32 @@ if not (vim.uv or vim.loop).fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(lazypath)
 
--- ⚡ 修复后的 Lazy.nvim 配置
 require("lazy").setup({
   spec = {
-    { import = "plugins" }
+    { import = "plugins" },
   },
-  defaults = {
-    -- 🔥 关键修复：不要默认延迟加载所有插件
-    -- lazy = true,  -- 删除这行！
-    -- 让每个插件自己决定是否延迟加载
+  install = {
+    colorscheme = { "vscode", "habamax" },
   },
-  install = { 
-    colorscheme = { "catppuccin", "habamax" } 
-  },
-  checker = { 
-    enabled = true,
-    frequency = 3600,
-  },
-  change_detection = {
-    enabled = true,
-    notify = false,
-  },
+  -- 关掉后台 git fetch：更新改成手动 :Lazy update
+  -- 每小时对全部插件跑一次 fetch 是编辑期卡顿和「今天怎么突然坏了」的常见来源
+  checker = { enabled = false },
+  -- 关掉配置文件监视：改完配置手动重启即可
+  change_detection = { enabled = false },
+  -- 没有任何插件需要 luarocks，关掉可以少一堆 checkhealth 噪音
+  rocks = { enabled = false },
   performance = {
-    cache = {
-      enabled = true,
-    },
+    cache = { enabled = true },
     reset_packpath = true,
     rtp = {
       disabled_plugins = {
         "gzip",
         "matchit",
-        "matchparen", 
+        -- matchparen 保持启用：编辑深嵌套 JSON 时括号配对高亮价值
+        -- 远大于它那点 CursorMoved 开销，大文件由 snacks.bigfile 兜底
         "netrwPlugin",
+        "rplugin",
+        "spellfile",
         "tarPlugin",
         "tohtml",
         "tutor",
@@ -99,9 +86,10 @@ require("lazy").setup({
       },
     },
   },
+  ui = { border = "rounded" },
 })
 
--- 启动时间监控命令
-vim.api.nvim_create_user_command('StartupTime', function()
-  vim.cmd('Lazy profile')
-end, {})
+-- 启动耗时分析
+vim.api.nvim_create_user_command("StartupTime", function()
+  vim.cmd("Lazy profile")
+end, { desc = "查看插件加载耗时" })

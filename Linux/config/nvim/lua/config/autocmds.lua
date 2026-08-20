@@ -1,14 +1,17 @@
 -- lua/config/autocmds.lua
 
--- 创建 augroup 以便于管理自动命令
 local augroup = vim.api.nvim_create_augroup("UserAutoCommands", { clear = true })
 
--- 在编辑文件时自动删除行尾空白（只对普通代码文件生效）
--- 白名单：排除不应自动修改的文件类型
+-- ══════════════════════════════════════════════════════════
+-- 保存时去掉行尾空白
+-- ══════════════════════════════════════════════════════════
 local trim_whitespace_excluded_ft = {
     gitcommit = true, markdown = true, diff = true,
     help = true, text = true,
 }
+-- 超过这个大小就跳过：对着几 MB 的 JSON 保存时不该跑全文件正则替换
+local TRIM_MAX_BYTES = 1024 * 1024
+
 vim.api.nvim_create_autocmd("BufWritePre", {
     group = augroup,
     pattern = "*",
@@ -21,22 +24,31 @@ vim.api.nvim_create_autocmd("BufWritePre", {
         then
             return
         end
+        local ok, stats = pcall((vim.uv or vim.loop).fs_stat, vim.api.nvim_buf_get_name(bufnr))
+        if ok and stats and stats.size > TRIM_MAX_BYTES then
+            return
+        end
         local view = vim.fn.winsaveview()
-        vim.cmd([[silent! %s/\s\+$//e]])
+        -- keeppatterns：不把这个内部替换写进搜索历史和 / 寄存器
+        vim.cmd([[silent! keeppatterns %s/\s\+$//e]])
         vim.fn.winrestview(view)
     end,
 })
 
--- 高亮复制区域
-vim.api.nvim_create_autocmd({ "TextYankPost" }, {
+-- ══════════════════════════════════════════════════════════
+-- 编辑体验
+-- ══════════════════════════════════════════════════════════
+
+-- 高亮复制区域（0.12 没有内置这项默认行为，需要自己加）
+vim.api.nvim_create_autocmd("TextYankPost", {
     group = augroup,
     pattern = "*",
     callback = function()
-        vim.highlight.on_yank({ higroup = "IncSearch", timeout = 200 })
+        vim.hl.on_yank({ higroup = "IncSearch", timeout = 200 })
     end,
 })
 
--- 退出插入模式时保持插入光标所在位置，不向左退一格
+-- 退出插入模式时保持光标位置，不向左退一格
 vim.api.nvim_create_autocmd("InsertLeavePre", {
     group = augroup,
     pattern = "*",
@@ -56,11 +68,15 @@ vim.api.nvim_create_autocmd("InsertLeave", {
     end,
 })
 
--- 打开文件时恢复光标位置
+-- 打开文件时恢复上次的光标位置
 vim.api.nvim_create_autocmd("BufReadPost", {
     group = augroup,
     pattern = "*",
-    callback = function()
+    callback = function(args)
+        -- 普通文件才恢复：commit message、终端、插件面板里乱跳很烦人
+        if vim.bo[args.buf].buftype ~= "" or vim.bo[args.buf].filetype == "gitcommit" then
+            return
+        end
         local last_pos = vim.fn.line("'\"")
         if last_pos > 0 and last_pos <= vim.fn.line("$") then
             vim.cmd('normal! g`"')
@@ -68,10 +84,25 @@ vim.api.nvim_create_autocmd("BufReadPost", {
     end,
 })
 
--- 自动设置某些文件类型的缩进和语法高亮
+-- ══════════════════════════════════════════════════════════
+-- 按文件类型设缩进
+-- ══════════════════════════════════════════════════════════
+-- Python 用 4 空格（PEP 8，也是 ruff format 的输出），其余用 2。
+-- 之前这两类混在一条规则里都设成 2，导致手写缩进和格式化结果永久打架。
 vim.api.nvim_create_autocmd("FileType", {
     group = augroup,
-    pattern = { "lua", "python", "javascript", "typescript", "json", "yaml" },
+    pattern = "python",
+    callback = function()
+        vim.bo.expandtab = true
+        vim.bo.shiftwidth = 4
+        vim.bo.tabstop = 4
+        vim.bo.softtabstop = 4
+    end,
+})
+
+vim.api.nvim_create_autocmd("FileType", {
+    group = augroup,
+    pattern = { "json", "jsonc", "json5", "yaml", "lua", "toml", "sh", "bash" },
     callback = function()
         vim.bo.expandtab = true
         vim.bo.shiftwidth = 2
@@ -80,7 +111,7 @@ vim.api.nvim_create_autocmd("FileType", {
     end,
 })
 
--- 为特定文件启用拼写检查
+-- 拼写检查（顺带关掉 treesitter，纯文本没必要跑解析器）
 vim.api.nvim_create_autocmd("FileType", {
     group = augroup,
     pattern = { "gitcommit", "text" },
@@ -91,7 +122,21 @@ vim.api.nvim_create_autocmd("FileType", {
     end,
 })
 
--- 当 Neovim 失去焦点时自动保存（只保存普通、已命名、可写的 buffer）
+-- 关闭这些窗口只需要按 q
+vim.api.nvim_create_autocmd("FileType", {
+    group = augroup,
+    pattern = { "help", "qf", "man", "lspinfo", "checkhealth", "query" },
+    callback = function(args)
+        vim.bo[args.buf].buflisted = false
+        vim.keymap.set("n", "q", "<cmd>close<cr>", { buffer = args.buf, silent = true })
+    end,
+})
+
+-- ══════════════════════════════════════════════════════════
+-- 文件同步
+-- ══════════════════════════════════════════════════════════
+
+-- 失去焦点时自动保存（只保存普通、已命名、可写且确实改过的 buffer）
 vim.api.nvim_create_autocmd("FocusLost", {
     group = augroup,
     callback = function()
@@ -110,7 +155,21 @@ vim.api.nvim_create_autocmd("FocusLost", {
     end,
 })
 
--- 打开终端时自动激活当前目录的 Python 虚拟环境（.venv）
+-- 外部改动过的文件自动重载（在别处改了配置文件切回来就能看到）
+vim.api.nvim_create_autocmd({ "FocusGained", "TermClose", "TermLeave" }, {
+    group = augroup,
+    callback = function()
+        if vim.o.buftype == "" then
+            vim.cmd("checktime")
+        end
+    end,
+})
+
+-- ══════════════════════════════════════════════════════════
+-- 终端 / 窗口 / tmux
+-- ══════════════════════════════════════════════════════════
+
+-- 打开终端时自动激活当前目录的 Python 虚拟环境
 vim.api.nvim_create_autocmd("TermOpen", {
     group = augroup,
     callback = function()
@@ -121,17 +180,26 @@ vim.api.nvim_create_autocmd("TermOpen", {
     end,
 })
 
--- 自动调整窗口大小
+-- 终端里不需要行号和光标行
+vim.api.nvim_create_autocmd("TermOpen", {
+    group = augroup,
+    callback = function()
+        vim.opt_local.number = false
+        vim.opt_local.relativenumber = false
+        vim.opt_local.signcolumn = "no"
+        vim.opt_local.cursorline = false
+    end,
+})
+
+-- 终端尺寸变化时等分窗口
 vim.api.nvim_create_autocmd("VimResized", {
     group = augroup,
     pattern = "*",
     command = "wincmd =",
-
 })
 
--- 在 tmux 中自动隐藏/显示状态栏
+-- 在 tmux 中自动隐藏/恢复状态栏
 if vim.env.TMUX then
-    -- 进入 Neovim 时隐藏 tmux 状态栏
     vim.api.nvim_create_autocmd("VimEnter", {
         group = augroup,
         pattern = "*",
@@ -139,8 +207,6 @@ if vim.env.TMUX then
             vim.fn.system("tmux set status off")
         end,
     })
-
-    -- 离开 Neovim 时恢复 tmux 状态栏
     vim.api.nvim_create_autocmd("VimLeavePre", {
         group = augroup,
         pattern = "*",
@@ -150,4 +216,4 @@ if vim.env.TMUX then
     })
 end
 
-return {} -- 返回一个空表，以便可以被 require
+return {}
