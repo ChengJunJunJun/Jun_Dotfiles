@@ -90,7 +90,7 @@ return {
       })
 
       -- ══════════════════════════════════════════════════════
-      -- ruff —— Python lint（Rust）
+      -- ruff —— Python lint（Rust）：已配置但未启用
       -- ══════════════════════════════════════════════════════
       -- 显式指定 cmd 走 PATH 里的 ruff，和 conform 用的是同一个二进制，
       -- 避免和 mason 那份产生版本漂移
@@ -148,8 +148,13 @@ return {
 
       -- ── 启用 ────────────────────────────────────────────
       vim.lsp.enable("ty")
-      vim.lsp.enable("ruff")
       vim.lsp.enable("lua_ls")
+
+      -- ruff LSP 已关闭：不再有 lint 诊断（F401/E501 那类波浪线）。
+      -- 格式化不受影响 —— conform 直接调 PATH 里的 ruff 二进制，不经过 LSP，
+      -- <leader>cf 仍然是 ruff_organize_imports + ruff_format。
+      -- 想恢复 lint，取消下面这行的注释即可。
+      -- vim.lsp.enable("ruff")
 
       -- 回滚到 pyright：ty 还在 beta，如果误报烦到你了，
       -- 注释掉上面的 vim.lsp.enable("ty")，并取消下面这行的注释即可。

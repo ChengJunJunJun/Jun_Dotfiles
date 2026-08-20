@@ -22,10 +22,22 @@ return {
         return " " .. vim.fn.fnamemodify(v, ":t")
       end
 
+      -- lualine 自带的 vscode 主题把背景写死成 #262626 / #373737，
+      -- 不跟 colorscheme.lua 里的 color_overrides 走，这里按新底色重刷一遍
+      local function lualine_theme()
+        local t = vim.deepcopy(require("lualine.themes.vscode"))
+        for _, mode in pairs(t) do
+          if mode.b then mode.b.bg = "#20212c" end
+          if mode.c then mode.c.bg = "#1a1b26" end
+        end
+        t.inactive.a.bg = "#1a1b26"
+        return t
+      end
+
       return {
         options = {
           icons_enabled = true,
-          theme = "vscode",
+          theme = lualine_theme(),
           component_separators = "|",
           section_separators = "",
           globalstatus = true, -- 配合 laststatus=3，整个窗口一条底栏

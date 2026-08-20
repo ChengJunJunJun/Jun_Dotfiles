@@ -4,7 +4,8 @@
 
 - Neovim **0.12+**，18 个插件，冷启动约 **15ms**
 - 启动时只加载 3 个插件（`lazy.nvim` / `snacks.nvim` / `vscode.nvim`），其余全部按需触发
-- Python 链路无 Node 进程：**ty**（类型检查）+ **ruff**（lint/格式化），都是 Rust
+- Python 链路无 Node 进程：**ty**（类型检查）+ **ruff**（格式化），都是 Rust
+- ruff 的 lint 诊断**已关闭**（`lua/plugins/lsp.lua` 里注释掉了 `vim.lsp.enable("ruff")`），格式化不受影响
 
 `<leader>` = **空格**。忘了键位就按一下空格，which-key 会列出来。
 
@@ -275,7 +276,7 @@ Neovim 这边不插手 —— 否则会重复 `source` 一遍，把命令回显�
 | `ripgrep` | 全文搜索 | `brew install ripgrep` |
 | `fd` | 文件查找 | `brew install fd` |
 | `jq` | JSON 格式化 | `brew install jq` |
-| `ruff` | Python lint + 格式化 + LSP | `uv tool install ruff` |
+| `ruff` | Python 格式化（lint 诊断已关闭） | `uv tool install ruff` |
 | `lazygit` | Git 界面 | `brew install lazygit` |
 | `ty` / `stylua` | Python 类型检查 / Lua 格式化 | 首次打开对应文件时 mason 自动装 |
 
@@ -305,10 +306,10 @@ lua/config/
   keymaps.lua                全局键位
   autocmds.lua               自动行为
 lua/plugins/
-  colorscheme.lua            VS Code Dark+ 配色
+  colorscheme.lua            VS Code Dark+ 配色（底色覆盖为 #1a1b26）
   snacks.lua                 UI 底座：查找器/文件树/大文件保护/终端/lazygit
   completion.lua             blink.cmp 补全
-  lsp.lua                    ty + ruff + lua_ls
+  lsp.lua                    ty + lua_ls（ruff 已配置未启用）
   formatting.lua             conform 格式化规则
   treesitter.lua             语法解析
   ui.lua                     状态栏 / 标签页 / 面包屑

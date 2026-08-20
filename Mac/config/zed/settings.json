@@ -22,10 +22,10 @@
         "dock": "right",
         "default_profile": "ask",
         "default_model": {
-            "effort": "medium",
+            "effort": "high",
             "enable_thinking": true,
             "provider": "zed.dev",
-            "model": "gpt-5.5",
+            "model": "claude-sonnet-5",
         },
     },
 
