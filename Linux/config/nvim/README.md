@@ -234,7 +234,8 @@ Neovim 0.12 内置了一套 `gr` 前缀的 LSP 键位，这份配置**刻意没�
 | `<C-/>` | 开 / 关终端（占屏幕下方 28%） |
 | `<C-\><C-n>` | 从终端回到 normal 模式 |
 
-打开终端时会自动 `source` 当前目录的 `.venv/bin/activate`。
+Python 虚拟环境由 zsh 自己处理（`Mac/zsh/config/lazy-loading.zsh` 里的 `_auto_uv_activate`），
+Neovim 这边不插手 —— 否则会重复 `source` 一遍，把命令回显到终端里。
 
 ---
 
@@ -249,6 +250,7 @@ Neovim 0.12 内置了一套 `gr` 前缀的 LSP 键位，这份配置**刻意没�
 - **大文件保护** —— 超过 1.5MB 自动关掉 treesitter、LSP 和折叠，6.8MB 的 JSON 也能秒开
 - **缩进自适应** —— Python 4 空格，JSON / YAML / Lua 2 空格
 - **tmux 状态栏** —— 进 Neovim 时自动隐藏，退出时恢复
+- **Python venv** —— 交给 zsh 的 `_auto_uv_activate` 处理，Neovim 不重复激活
 
 ---
 

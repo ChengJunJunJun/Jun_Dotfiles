@@ -169,16 +169,10 @@ vim.api.nvim_create_autocmd({ "FocusGained", "TermClose", "TermLeave" }, {
 -- 终端 / 窗口 / tmux
 -- ══════════════════════════════════════════════════════════
 
--- 打开终端时自动激活当前目录的 Python 虚拟环境
-vim.api.nvim_create_autocmd("TermOpen", {
-    group = augroup,
-    callback = function()
-        local venv = vim.fn.getcwd() .. "/.venv/bin/activate"
-        if vim.fn.filereadable(venv) == 1 then
-            vim.fn.chansend(vim.b.terminal_job_id, "source " .. venv .. "\n")
-        end
-    end,
-})
+-- 注意：这里刻意不做 venv 自动激活。
+-- zsh 侧的 _auto_uv_activate（Mac/zsh/config/lazy-loading.zsh）已经在
+-- shell 启动和 chpwd 时处理了，而且做得更完整：离开目录会自动 deactivate，
+-- 也不会抢占手动激活的其他 venv。在这里再 source 一遍只会把命令回显到终端里。
 
 -- 终端里不需要行号和光标行
 vim.api.nvim_create_autocmd("TermOpen", {
