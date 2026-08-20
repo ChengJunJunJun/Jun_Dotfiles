@@ -18,7 +18,19 @@ return {
       { "gsF", desc = "查找左侧包围" },
       { "gsh", desc = "高亮包围" },
     },
-    opts = {},
+    opts = {
+      -- 必须显式指定：mini.surround 默认用 sa/sd/sr，
+      -- 那会遮蔽 vim 内置的 s（替换单个字符），而且和上面的 keys 触发器对不上
+      mappings = {
+        add = "gsa",
+        delete = "gsd",
+        find = "gsf",
+        find_left = "gsF",
+        highlight = "gsh",
+        replace = "gsr",
+        update_n_lines = "gsn",
+      },
+    },
   },
 
   -- Git 提示：左侧 gutter 的增删改标记（VS Code 观感），
