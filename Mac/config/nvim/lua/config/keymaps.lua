@@ -4,10 +4,9 @@ local keymap = vim.keymap.set
 -- ══════════════════════════════════════════════════════════
 -- 窗口 / 缓冲区
 -- ══════════════════════════════════════════════════════════
-keymap("n", "<C-h>", "<C-w>h", { desc = "切到左窗口" })
-keymap("n", "<C-j>", "<C-w>j", { desc = "切到下窗口" })
-keymap("n", "<C-k>", "<C-w>k", { desc = "切到上窗口" })
-keymap("n", "<C-l>", "<C-w>l", { desc = "切到右窗口" })
+-- C-hjkl 的窗口切换已移交 vim-tmux-navigator (lua/plugins/tmux.lua)：
+-- 同样的键，但走到 nvim 分屏边缘时会继续跳进相邻的 tmux 面板。
+-- 在这里再 keymap 一遍会和插件的 lazy 按键触发器打架。
 
 keymap("n", "<M-Up>", ":resize +2<CR>", { silent = true, desc = "增加窗口高度" })
 keymap("n", "<M-Down>", ":resize -2<CR>", { silent = true, desc = "减少窗口高度" })
