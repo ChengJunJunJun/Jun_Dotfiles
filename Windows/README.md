@@ -35,3 +35,9 @@ Windows Git 使用普通提交，不启用提交签名，无需 1Password 验证
 - Yazi 主题目录由 Git 忽略；`package.toml` 保留版本信息。安装脚本建立链接后运行 `ya pkg install` 恢复依赖，也可在链接建立后手动运行此命令。参见 [Yazi 包管理文档](https://yazi-rs.github.io/docs/cli/)。
 - `.backup-*` 文件保留在本机，不纳入版本控制。
 - Python 工具需要 `uv`：如果本机已安装，脚本会安装缺失的 `ruff` 和 `ty`；否则需自行安装并确保它们在 PATH 中。
+
+## SSH 中运行 Codex
+
+PowerShell Profile 中的 `codex` 函数在检测到 `SSH_CONNECTION` 或 `SSH_CLIENT` 时添加 `default_permissions=":danger-full-access"`，避免 Windows 沙箱在 SSH 会话下启动超时。本机启动仍采用 config.toml 中的工作区沙箱，审批策略保持不变。
+
+首次应用后执行 `. $PROFILE`，然后退出旧 Codex 会话并重新运行 `codex`。直接调用 `codex.cmd`、`codex.exe` 或通过不加载 Profile 的进程启动不会经过此包装函数。

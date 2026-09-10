@@ -68,6 +68,18 @@ function global:update-ai {
     if (Get-Command grok -ErrorAction SilentlyContinue) { & grok update }
 }
 
+# Only SSH-launched Codex skips the Windows sandbox. Keep approval settings.
+function global:codex {
+    $launcher = Get-Command codex -CommandType ExternalScript,Application -ErrorAction Stop |
+        Select-Object -First 1
+    if ($env:SSH_CONNECTION -or $env:SSH_CLIENT) {
+        & $launcher.Source -c 'default_permissions=":danger-full-access"' @args
+    } else {
+        & $launcher.Source @args
+    }
+    $global:LASTEXITCODE = $LASTEXITCODE
+}
+
 # Never initialize terminal UI for redirected SSH commands or automation.
 $interactiveTerminal = $Host.Name -eq 'ConsoleHost' -and
     -not [Console]::IsInputRedirected -and -not [Console]::IsOutputRedirected
