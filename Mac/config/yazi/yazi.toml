@@ -1,6 +1,5 @@
 # A TOML linter such as https://taplo.tamasfe.dev/ can use this schema to validate your config.
 # If you encounter any issues, please make an issue at https://github.com/yazi-rs/schemas.
-"$schema" = "https://yazi-rs.github.io/schemas/yazi.json"
 
 [mgr]
 # 三栏宽度比例: 父目录 / 当前目录 / 预览栏。预览栏给大一点，适合看代码、图片和 PDF。
