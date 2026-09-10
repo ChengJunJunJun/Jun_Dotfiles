@@ -14,8 +14,8 @@
 
 # Core Git Settings
 [core]
-	autocrlf = input                     # 控制 Git 如何处理行结束符（换行符）的转换。input - 在 Windows 上将 LF 转换为 CRLF，在 Mac 上保持原样。
-	excludesfile = ~/Jun_Dotfiles/Mac/git/.gitignore
+	autocrlf = input                     # 控制 Git 如何处理行结束符（换行符）的转换。input - 提交时将 CRLF 转为 LF，检出时不转换。
+	excludesfile = ~/Jun_Dotfiles/Windows/git/.gitignore
 	pager = less -F -X                   # Git 只在输出超过终端高度时才使用分页器
 	editor = nvim                        # 设置默认的编辑器为 nvim
 	# fsmonitor = true                   # 启用文件系统监控器，提升大型仓库的性能。💡 大型项目可以尝试启用

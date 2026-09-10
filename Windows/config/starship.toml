@@ -1,0 +1,2 @@
+# Keep the standard cross-platform Starship prompt.
+command_timeout = 1000

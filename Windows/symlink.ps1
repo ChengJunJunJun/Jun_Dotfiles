@@ -1,51 +1,32 @@
-# ========================
-# 统一配置
-# ========================
-$dotfiles = "$HOME\Jun_Dotfiles\Windows"
-
-# Git config
-$gitSource = "$dotfiles\git\.gitconfig"
-$gitTarget = "$HOME\.gitconfig"
-$gitignoreSource = "$dotfiles\git\.gitignore"
-$gitignoreTarget = "$HOME\.gitignore"
-
-# PowerShell profile
-$psSource = "$dotfiles\Microsoft.PowerShell_profile.ps1"
-$psTarget = $PROFILE
-
-# ========================
-# 函数：创建符号链接（自动覆盖）
-# ========================
-function New-Symlink {
-param (
-[string]$Source,
-[string]$Target
-)
-# 确保目录存在
-$dir = Split-Path $Target
-if (!(Test-Path $dir)) {
-    New-Item -ItemType Directory -Path $dir -Force | Out-Null
+[CmdletBinding(SupportsShouldProcess)]
+param()
+$ErrorActionPreference = 'Stop'
+$dotfiles = $PSScriptRoot
+function New-BackedUpLink {
+    param([string]$Source,[string]$Target)
+    if (!(Test-Path -LiteralPath $Source)) { throw "Missing source: $Source" }
+    $Source = [IO.Path]::GetFullPath($Source)
+    $Target = [IO.Path]::GetFullPath($Target)
+    $item = Get-Item -LiteralPath $Target -Force -ErrorAction SilentlyContinue
+    if ($item -and $item.LinkType -eq 'SymbolicLink' -and
+        [IO.Path]::GetFullPath([string]$item.Target) -eq $Source) { Write-Host "Already linked: $Target"; return }
+    if (!$PSCmdlet.ShouldProcess($Target,"Link to $Source (back up existing target)")) { return }
+    New-Item -ItemType Directory -Path (Split-Path $Target) -Force | Out-Null
+    $backup = $null
+    if ($item) {
+        $backup = $Target + '.backup-' + (Get-Date -Format 'yyyyMMdd-HHmmss') + '-' + [guid]::NewGuid().ToString('N').Substring(0,6)
+        Move-Item -LiteralPath $Target -Destination $backup
+    }
+    try { New-Item -ItemType SymbolicLink -Path $Target -Target $Source | Out-Null }
+    catch {
+        if ($backup) { Move-Item -LiteralPath $backup -Destination $Target }
+        throw
+    }
+    Write-Host "Linked: $Target"
 }
-# 删除已有文件
-if (Test-Path $Target) {
-    Remove-Item $Target -Force
-}
-# 创建符号链接
-New-Item -ItemType SymbolicLink -Path $Target -Target $Source | Out-Null
-Write-Host "✔ $Target -> $Source"
-}
-
-# ========================
-# 执行
-# ========================
-Write-Host "== 创建符号链接 =="
-New-Symlink -Source $gitSource -Target $gitTarget
-New-Symlink -Source $gitignoreSource -Target $gitignoreTarget
-New-Symlink -Source $psSource -Target $psTarget
-
-# ========================
-# 立即生效（关键）
-# ========================
-Write-Host "`n== 重新加载 PowerShell Profile =="
-. $PROFILE
-Write-Host "`n全部完成 ✔"
+New-BackedUpLink "$dotfiles/git/.gitconfig" "$HOME/.gitconfig"
+New-BackedUpLink "$dotfiles/git/.gitignore" "$HOME/.gitignore"
+New-BackedUpLink "$dotfiles/Microsoft.PowerShell_profile.ps1" $PROFILE
+New-BackedUpLink "$dotfiles/config/starship.toml" "$HOME/.config/starship.toml"
+New-BackedUpLink "$dotfiles/config/nvim" "$env:LOCALAPPDATA/nvim"
+New-BackedUpLink "$dotfiles/config/yazi" "$env:APPDATA/yazi/config"
