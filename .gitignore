@@ -62,7 +62,6 @@ Linux/tmux/plugins
 
 # Yazi flavors/themes 通过包管理器安装
 Mac/config/yazi/flavors/
-Windows/config/yazi/flavors/
 
 # Yazi 第三方插件目录（本地自定义插件可单独放行）
 Mac/config/yazi/plugins/*
