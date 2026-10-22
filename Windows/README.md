@@ -1,12 +1,59 @@
 # Windows 终端配置
 
-PowerShell 7 + Starship + PSFzf + zoxide，配合原生 Neovim 和 Yazi。
+PowerShell 7 + Starship + PSFzf + zoxide，配合原生 Neovim。
 
-## 安装与恢复
+## 配置位置
 
-在 PowerShell 7 中运行 `./install-tools.ps1`，然后重新打开 Windows Terminal。
-只重建配置链接时运行 `./symlink.ps1`；可用 `-WhatIf` 预览。
-链接脚本保留已有目标为 `.backup-时间戳-随机后缀`，正确链接不会重复替换。
+此目录只维护配置。工具自行安装，配置可复制或建立符号链接到对应位置：
+
+| 仓库配置 | 使用位置 |
+|---|---|
+| `Microsoft.PowerShell_profile.ps1` | PowerShell 7 的 `$PROFILE` |
+| `git/.gitconfig` | `$HOME/.gitconfig` |
+| `git/.gitignore` | 由 `.gitconfig` 的 `core.excludesfile` 引用 |
+| `config/starship.toml` | `$HOME/.config/starship.toml` |
+| `config/nvim/` | `$env:LOCALAPPDATA/nvim/` |
+
+应用配置后重新打开 PowerShell。
+
+## 应用配置的命令
+
+在 **PowerShell 7** 中运行。创建符号链接需要开启 Windows 开发者模式，或以管理员身份打开 PowerShell。
+
+只想在当前终端立即使用 PowerShell 配置：
+
+```powershell
+. 'C:\Users\Administrator\Jun_Dotfiles\Windows\Microsoft.PowerShell_profile.ps1'
+```
+
+让 PowerShell、Git、Starship 和 Neovim 使用仓库配置，直接覆盖已有配置，不保留备份：
+
+```powershell
+$configRoot = 'C:\Users\Administrator\Jun_Dotfiles\Windows'
+
+New-Item -ItemType Directory -Path (Split-Path $PROFILE), "$HOME\.config" -Force | Out-Null
+
+Remove-Item -LiteralPath $PROFILE, "$HOME\.gitconfig", "$HOME\.config\starship.toml" -Force -ErrorAction SilentlyContinue
+Remove-Item -LiteralPath "$env:LOCALAPPDATA\nvim" -Recurse -Force -ErrorAction SilentlyContinue
+
+New-Item -ItemType SymbolicLink -Path $PROFILE -Target "$configRoot\Microsoft.PowerShell_profile.ps1"
+New-Item -ItemType SymbolicLink -Path "$HOME\.gitconfig" -Target "$configRoot\git\.gitconfig"
+New-Item -ItemType SymbolicLink -Path "$HOME\.config\starship.toml" -Target "$configRoot\config\starship.toml"
+New-Item -ItemType SymbolicLink -Path "$env:LOCALAPPDATA\nvim" -Target "$configRoot\config\nvim"
+
+# 在当前终端加载；以后新开的 PowerShell 会自动加载。
+. $PROFILE
+```
+
+Git 的全局忽略规则已由 `.gitconfig` 指向仓库内的 `Windows/git/.gitignore`，无需单独建立链接。Neovim 链接建立后，首次打开 `nvim` 会引导安装插件；在 Neovim 内运行 `:Lazy restore` 可恢复锁定的插件版本。
+
+修改 PowerShell 配置后，在当前终端重新加载：
+
+```powershell
+. $PROFILE
+# 也可以使用配置提供的快捷命令：
+s.
+```
 
 ## 常用操作
 
@@ -17,27 +64,30 @@ PowerShell 7 + Starship + PSFzf + zoxide，配合原生 Neovim 和 Yazi。
 - `fdf` / `fdd` / `rga`：文件 / 目录 / 全文搜索。
 - `gs` / `gl` / `gc` / `gp`：Git status / log / commit / pull，参数会传递给 Git。
 - `nvim`：Neovim；空格是 leader；`Space ff` 找文件、`Space fg` 搜内容、`Space e` 文件树、`Space cf` 格式化。
-- `y`：启动 Yazi，退出后 PowerShell 跟随到选中的目录。
-- Yazi 内 `s` / `S` 搜索文件名 / 内容，`z` / `Z` 使用 fzf / zoxide，`O` 选择打开方式。
 
 ## Windows 适配
 
-PowerShell 仅在交互终端加载 PSReadLine 预测界面、PSFzf、zoxide 和 Starship，避免 SSH 自动化报错。
+PowerShell 仅在交互终端加载 PSReadLine 预测界面、zoxide 和 Starship；PSFzf 在首次按 `Ctrl+R` / `Ctrl+T` / `Alt+C` 时加载，首次按键会直接完成对应操作。重定向和 `-NonInteractive` 启动不加载这些终端组件。
 Neovim 使用 Windows state 目录保存撤销记录，Python 虚拟环境路径为 `.venv/Scripts/python.exe`，原生分屏替代 tmux 联动。
-Yazi 使用 Explorer / Windows 默认应用打开文件，支持 D 盘项目，不加载 Mac 的用户目录边界插件。
 Windows Git 使用普通提交，不启用提交签名，无需 1Password 验证。
 配置没有修改 Windows Terminal 的字体和全局快捷键。图标显示取决于终端字体。
 
-## 版本控制与依赖恢复
+## 依赖与插件
 
-- 提交 PowerShell、Starship、Neovim、Yazi 配置和安装脚本。
+- 常用工具：Git、Starship、fzf、zoxide、ripgrep、fd、Neovim、lazygit、jq、Zig、7-Zip，以及 PowerShell 模块 PSReadLine、PSFzf。
 - 保留 Neovim 的 `lazy-lock.json`；需要按锁定版本恢复时，在 Neovim 中运行 `:Lazy restore`。
-- Yazi 主题目录由 Git 忽略；`package.toml` 保留版本信息。安装脚本建立链接后运行 `ya pkg install` 恢复依赖，也可在链接建立后手动运行此命令。参见 [Yazi 包管理文档](https://yazi-rs.github.io/docs/cli/)。
-- `.backup-*` 文件保留在本机，不纳入版本控制。
-- Python 工具需要 `uv`：如果本机已安装，脚本会安装缺失的 `ruff` 和 `ty`；否则需自行安装并确保它们在 PATH 中。
+- Python 工具使用 `uv`、`ruff` 和 `ty`，自行安装并确保它们在 PATH 中。
 
-## SSH 中运行 Codex
+已安装上述命令行工具后，可按需安装 PowerShell 模块和 Python 工具：
 
-PowerShell Profile 中的 `codex` 函数在检测到 `SSH_CONNECTION` 或 `SSH_CLIENT` 时添加 `default_permissions=":danger-full-access"`，避免 Windows 沙箱在 SSH 会话下启动超时。本机启动仍采用 config.toml 中的工作区沙箱，审批策略保持不变。
+```powershell
+Install-Module PSFzf -Repository PSGallery -Scope CurrentUser
+uv tool install ruff
+uv tool install ty
+```
 
-首次应用后执行 `. $PROFILE`，然后退出旧 Codex 会话并重新运行 `codex`。直接调用 `codex.cmd`、`codex.exe` 或通过不加载 Profile 的进程启动不会经过此包装函数。
+## 启动优化
+
+Starship 的完整初始化脚本和 zoxide 初始化脚本缓存在 `%LOCALAPPDATA%\Jun-Dotfiles\powershell`。缓存命中时不再运行初始化子进程；提示符渲染、Git 状态查询仍按工具自身逻辑执行。工具路径、符号链接目标、文件时间/大小、初始化参数或 PowerShell 版本变化时自动重建缓存。缓存写入失败时使用本次生成的代码；初始化失败时警告并跳过该组件。
+
+PSFzf 的模块导入开销移到第一次模糊搜索。`Ctrl+R` 仍然只将历史命令插入编辑行，按回车才执行。快捷键使用 [PSReadLine 自定义处理器](https://learn.microsoft.com/en-us/powershell/module/psreadline/set-psreadlinekeyhandler)。

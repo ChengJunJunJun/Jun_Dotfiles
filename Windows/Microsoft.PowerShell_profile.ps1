@@ -4,11 +4,6 @@ $OutputEncoding = [Console]::OutputEncoding
 $env:EDITOR = 'nvim'
 $env:VISUAL = 'nvim'
 $env:STARSHIP_CONFIG = Join-Path $HOME '.config/starship.toml'
-$gitCommand = Get-Command git -ErrorAction SilentlyContinue
-if ($gitCommand) {
-    $gitFile = Join-Path (Split-Path (Split-Path $gitCommand.Source)) 'usr/bin/file.exe'
-    if (Test-Path $gitFile) { $env:YAZI_FILE_ONE = $gitFile }
-}
 $sevenZip = Join-Path $env:ProgramFiles '7-Zip'
 if ((Test-Path "$sevenZip/7z.exe") -and $sevenZip -notin ($env:PATH -split ';')) {
     $env:PATH += ";$sevenZip"
@@ -30,16 +25,6 @@ function global:proj { Set-Location 'D:\Projects' }
 function global:fdf { & fd --type f --hidden --exclude .git @args }
 function global:fdd { & fd --type d --hidden --exclude .git @args }
 function global:rga { & rg --smart-case --hidden --glob '!.git' --line-number @args }
-function global:y {
-    $cwdFile = [IO.Path]::GetTempFileName()
-    try {
-        & yazi @args --cwd-file $cwdFile
-        $target = Get-Content -LiteralPath $cwdFile -Raw
-        if ($target -and (Test-Path -LiteralPath $target.Trim() -PathType Container)) {
-            Set-Location -LiteralPath $target.Trim()
-        }
-    } finally { Remove-Item -LiteralPath $cwdFile -Force -ErrorAction SilentlyContinue }
-}
 $env:FZF_DEFAULT_COMMAND = 'fd --type f --hidden --exclude .git'
 $env:FZF_CTRL_T_COMMAND = $env:FZF_DEFAULT_COMMAND
 $env:FZF_ALT_C_COMMAND = 'fd --type d --hidden --exclude .git'
@@ -63,26 +48,15 @@ function global:refresh { Clear-DnsClientCache }
 function global:rust_up { & rustup update stable @args }
 function global:up { & winget upgrade --all @args }
 function global:update-ai {
-    & npm update -g '@anthropic-ai/claude-code' '@openai/codex'
+    & npm update -g '@anthropic-ai/claude-code'
     if ($LASTEXITCODE -ne 0) { return }
     if (Get-Command grok -ErrorAction SilentlyContinue) { & grok update }
 }
 
-# Only SSH-launched Codex skips the Windows sandbox. Keep approval settings.
-function global:codex {
-    $launcher = Get-Command codex -CommandType ExternalScript,Application -ErrorAction Stop |
-        Select-Object -First 1
-    if ($env:SSH_CONNECTION -or $env:SSH_CLIENT) {
-        & $launcher.Source -c 'default_permissions=":danger-full-access"' @args
-    } else {
-        & $launcher.Source @args
-    }
-    $global:LASTEXITCODE = $LASTEXITCODE
-}
-
 # Never initialize terminal UI for redirected SSH commands or automation.
 $interactiveTerminal = $Host.Name -eq 'ConsoleHost' -and
-    -not [Console]::IsInputRedirected -and -not [Console]::IsOutputRedirected
+    -not [Console]::IsInputRedirected -and -not [Console]::IsOutputRedirected -and
+    -not ([Environment]::GetCommandLineArgs() -match '^-noni')
 if (-not $interactiveTerminal) { return }
 
 Import-Module PSReadLine -ErrorAction Stop
@@ -93,14 +67,106 @@ if ($Host.UI.SupportsVirtualTerminal) {
 }
 Set-PSReadLineKeyHandler -Key UpArrow -Function HistorySearchBackward
 Set-PSReadLineKeyHandler -Key DownArrow -Function HistorySearchForward
-if (Get-Command zoxide -ErrorAction SilentlyContinue) {
-    Invoke-Expression (& zoxide init powershell | Out-String)
+
+# Cache generated init code, not prompt output. Binary/path/arguments/PowerShell
+# changes invalidate it automatically. A warm launch starts no init subprocesses.
+function global:Get-DotfilesShellInit {
+    param([string]$Name, [string[]]$Arguments)
+    $command = Get-Command $Name -CommandType Application -ErrorAction SilentlyContinue |
+        Select-Object -First 1
+    if (!$command) { return }
+    $process = $null
+    try {
+        $binary = Get-Item -LiteralPath $command.Source -ErrorAction Stop
+        # Resolve WinGet links so upgrades invalidate even if the link timestamp stays unchanged.
+        if ($binary.LinkType -eq 'SymbolicLink') { $binary = $binary.ResolveLinkTarget($true) }
+        if (!$binary -or !$binary.Exists) { throw "Executable target is missing: $($command.Source)" }
+        $signature = '{0}|{1}|{2}|{3}|{4}' -f $command.Source, $binary.FullName,
+            $binary.LastWriteTimeUtc.Ticks, $binary.Length, ($PSVersionTable.PSVersion.ToString() + '|' + ($Arguments -join '|'))
+        $hash = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.Encoding]::UTF8.GetBytes($signature)))
+        $header = "# dotfiles-init-v1 $hash"
+        $cacheDir = Join-Path $env:LOCALAPPDATA 'Jun-Dotfiles/powershell'
+        $cacheFile = Join-Path $cacheDir "$Name.ps1"
+        if ([IO.File]::Exists($cacheFile)) {
+            $cached = [IO.File]::ReadAllText($cacheFile)
+            if ($cached.StartsWith($header + "`n")) { return $cached }
+        }
+        $info = [Diagnostics.ProcessStartInfo]::new($command.Source)
+        $info.UseShellExecute = $false
+        $info.CreateNoWindow = $true
+        $info.RedirectStandardOutput = $true
+        $info.RedirectStandardError = $true
+        $info.StandardOutputEncoding = [Text.Encoding]::UTF8
+        foreach ($argument in $Arguments) { $info.ArgumentList.Add($argument) }
+        $process = [Diagnostics.Process]::new()
+        $process.StartInfo = $info
+        $null = $process.Start()
+        $stdout = $process.StandardOutput.ReadToEndAsync()
+        $stderr = $process.StandardError.ReadToEndAsync()
+        if (!$process.WaitForExit(3000)) {
+            $process.Kill($true)
+            throw 'Initialization timed out after 3 seconds.'
+        }
+        $code = $stdout.GetAwaiter().GetResult()
+        if ($process.ExitCode -ne 0 -or [string]::IsNullOrWhiteSpace($code)) {
+            throw "Init failed ($($process.ExitCode)): $($stderr.GetAwaiter().GetResult())"
+        }
+        # Never replace a working cache with partial output. Concurrent shells use separate temp files.
+        $cached = $header + "`n" + $code
+        $temporary = $null
+        try {
+            $null = [IO.Directory]::CreateDirectory($cacheDir)
+            $temporary = Join-Path $cacheDir "$Name-$([guid]::NewGuid().ToString('N')).tmp"
+            [IO.File]::WriteAllText($temporary, $cached, [Text.UTF8Encoding]::new($false))
+            [IO.File]::Move($temporary, $cacheFile, $true)
+        } catch {
+            Write-Verbose "Cannot persist $Name init cache: $_"
+        } finally {
+            if ($temporary -and [IO.File]::Exists($temporary)) { [IO.File]::Delete($temporary) }
+        }
+        return $cached
+    } catch {
+        Write-Warning "$Name initialization skipped: $_"
+    } finally {
+        if ($process) { $process.Dispose() }
+    }
 }
-if ((Get-Command fzf -ErrorAction SilentlyContinue) -and (Get-Module -ListAvailable PSFzf)) {
-    Import-Module PSFzf
-    Set-PsFzfOption -PSReadlineChordProvider 'Ctrl+t' -PSReadlineChordReverseHistory 'Ctrl+r'
-    Set-PSReadLineKeyHandler -Key Alt+c -ScriptBlock { Invoke-FuzzySetLocation }
+
+# Import PSFzf only on the first fuzzy-search key. Dispatch that same key once,
+# so the first Ctrl+R still searches instead of merely loading the module.
+function global:Enable-DotfilesFzf {
+    try {
+        if (!(Get-Command fzf -CommandType Application -ErrorAction SilentlyContinue)) {
+            throw 'fzf is missing from PATH.'
+        }
+        if (!(Get-Module PSFzf)) { Import-Module PSFzf -Global -ErrorAction Stop }
+        Set-PsFzfOption -PSReadlineChordProvider 'Ctrl+t' -PSReadlineChordReverseHistory 'Ctrl+r'
+        Set-PSReadLineKeyHandler -Key Alt+c -ScriptBlock { Invoke-FuzzySetLocation }
+        return $true
+    } catch {
+        Write-Warning "Fuzzy search unavailable: $_ Check that fzf and PSFzf are installed and available."
+        return $false
+    }
 }
-if ($env:TERM -ne 'dumb' -and (Get-Command starship -ErrorAction SilentlyContinue)) {
-    Invoke-Expression (& starship init powershell | Out-String)
+Set-PSReadLineKeyHandler -Key Ctrl+t -BriefDescription 'LoadFzfFiles' -ScriptBlock {
+    if (Enable-DotfilesFzf) { Invoke-FzfPsReadlineHandlerProvider }
 }
+Set-PSReadLineKeyHandler -Key Ctrl+r -BriefDescription 'LoadFzfHistory' -ScriptBlock {
+    if (Enable-DotfilesFzf) { Invoke-FzfPsReadlineHandlerHistory }
+}
+Set-PSReadLineKeyHandler -Key Alt+c -BriefDescription 'LoadFzfDirectory' -ScriptBlock {
+    if (Enable-DotfilesFzf) { Invoke-FuzzySetLocation }
+}
+
+if ($env:TERM -ne 'dumb') {
+    # Cache the full script: plain `init powershell` returns a second init invocation.
+    $starshipInit = Get-DotfilesShellInit starship @('init', 'powershell', '--print-full-init')
+    if ($starshipInit) {
+        Invoke-Expression $starshipInit
+        # Starship replaced prompt; let zoxide wrap the new prompt once on reload.
+        $global:__zoxide_hooked = 0
+    }
+}
+$zoxideInit = Get-DotfilesShellInit zoxide @('init', 'powershell')
+if ($zoxideInit) { Invoke-Expression $zoxideInit }
+Remove-Variable starshipInit,zoxideInit -ErrorAction SilentlyContinue
