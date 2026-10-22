@@ -32,7 +32,7 @@ zdefer() { _zsh_defer_cmds+=("$1") }
 #   performance - fpath / 历史 / setopt / 补全样式（提供 _zsh_run_compinit）
 #   keybindings - 快捷键
 #   aliases     - 别名
-#   fzf / lazy-loading - 只导出变量，重活排进 zdefer
+#   fzf / lazy-loading - nvm 环境初始化，其余按需或延迟加载
 #   plugins     - 最后：starship + zle -F 延迟执行器（需收齐 zdefer 队列）
 for _mod in path environment performance keybindings aliases fzf lazy-loading plugins; do
   if [[ -r "${ZSH_CONFIG_DIR}/${_mod}.zsh" ]]; then

@@ -13,6 +13,9 @@ export LS_COLORS='di=1;34:ln=1;35:so=1;32:pi=1;33:ex=1;31:bd=34;46:cd=34;43:su=3
 
 export HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_ANALYTICS=1
 
+# nvm 的 Node 安装目录必须独立于 Homebrew Cellar，避免升级时被删除。
+export NVM_DIR="$HOME/.nvm"
+
 # 仓库根目录的本地密钥（已在 .gitignore）
 if [[ -r "${DOTFILES_ROOT:-}/.env" ]]; then
   set -a

@@ -33,18 +33,16 @@ for _pd in /opt/homebrew /usr/local; do
 done
 
 # 按优先级前置自定义路径（目录存在才加入）
+# Antigravity CLI（agy）安装在 ~/.local/bin，由这里统一加入 PATH。
 for _pd in "$HOME/.grok/bin" "$HOME/.local/bin" \
            "$HOMEBREW_PREFIX/opt/rustup/bin" /Library/TeX/texbin; do
   [[ -d "$_pd" ]] && path=("$_pd" $path)
 done
 
-# Node：优先无版本 keg，再回退常见 major 版本。
-# 注意：追加而非前置。node@22 等版本化 keg 自带 npm（如 10.9.8），
-# 前置会遮蔽 $HOMEBREW_PREFIX/bin 下全局安装的 npm（npm i -g npm@latest）。
-for _pd in "$HOMEBREW_PREFIX/opt/node" "$HOMEBREW_PREFIX/opt/node@22" \
-           "$HOMEBREW_PREFIX/opt/node@20"; do
-  [[ -d "$_pd/bin" ]] && { path+=("$_pd/bin"); break }
-done
+# Node 交由 nvm 管理（在 lazy-loading.zsh 初始化）。
+# 清除旧 shell 继承的 Homebrew Node 专用路径，避免 exec zsh 后仍使用旧版本。
+path=("${(@)path:#${HOMEBREW_PREFIX}/opt/node/bin}")
+path=("${(@)path:#${HOMEBREW_PREFIX}/opt/node@*/bin}")
 unset _pd
 
 normalize_path_entries

@@ -1,6 +1,15 @@
 # =============================================================================
-# 延迟加载与智能环境（zoxide / conda / uv）
+# 环境初始化、延迟加载与智能环境（nvm / zoxide / conda / uv）
 # =============================================================================
+
+# nvm 立即加载，让默认 Node 在首条命令前生效；补全等 compinit 后再加载。
+# Homebrew 的 nvm.sh 会按需创建 NVM_DIR。
+if [[ -s "$HOMEBREW_PREFIX/opt/nvm/nvm.sh" ]]; then
+  source "$HOMEBREW_PREFIX/opt/nvm/nvm.sh"
+  if [[ -s "$HOMEBREW_PREFIX/opt/nvm/etc/bash_completion.d/nvm" ]]; then
+    zdefer 'source "$HOMEBREW_PREFIX/opt/nvm/etc/bash_completion.d/nvm"'
+  fi
+fi
 
 # Zoxide：保留原生 cd，用 z / zi 智能跳转。
 # 排进 zdefer 而非直接 eval——zoxide 的 compdef 需要 compinit 已跑完才生效。

@@ -10,12 +10,27 @@ alias ..='cd ..'
 alias ...='cd ../..'
 alias grep='grep --color=auto'
 
-# Homebrew：完整升级（brew cu 可选，避免未装 tap 时整条失败）
+# Homebrew + nvm Node 最新版（包括新的 major 版本；brew cu 可选）
 up() {
+  if ! (( ${+functions[nvm]} )); then
+    print -u2 'nvm 尚未加载，请先重新打开终端。'
+    return 1
+  fi
   brew update && brew upgrade || return $?
   if brew cu --help &>/dev/null; then
     brew cu -a -y || true
   fi
+
+  local previous_node
+  previous_node=$(nvm current)
+  nvm install node || return $?
+  # 仅跨版本迁移全局包，避免从同一个版本重复安装。
+  if [[ "$previous_node" == v* && "$previous_node" != "$(nvm current)" ]]; then
+    nvm reinstall-packages "$previous_node" || return $?
+  fi
+  nvm alias default node || return $?
+  nvm use node || return $?
+
   brew cleanup --prune=all
   brew autoremove
   brew doctor --quiet
